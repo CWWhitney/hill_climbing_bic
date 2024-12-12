@@ -1,7 +1,6 @@
+# Expert Model Validation with Hill Climbing and BIC in R
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-# New Project
 
 <!-- badges: start -->
 
@@ -10,7 +9,7 @@
 This project aims to validate expert knowledge-based models using hill climbing optimization and the Bayesian Information Criterion (BIC). The objective is to compare models derived from expert knowledge against those optimized using hill climbing in R. It contains the
 following folders: [analysis](./analysis), [data](./data),
 [experiments](./experiments), [other](./other),
-[preprocessing](./preprocessing). # Expert Model Validation with Hill Climbing and BIC in R
+[preprocessing](./preprocessing). 
 
 ## Project Structure
 
