@@ -15,10 +15,5 @@ following folders:
 [other](./other), Implementation of the hill climbing algorithm in R.
 [preprocessing](./preprocessing). R scripts for model validation using BIC.
 
-- **notebooks/**: RMarkdown files for data analysis and visualization.
+- **index/**: RMarkdown files for data analysis and visualization.
 
-## Getting Started
-
-### Prerequisites
-
-Ensure you have R and RStudio installed. Use the following command to install required packages:
