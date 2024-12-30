@@ -63,4 +63,4 @@ plot(fitted_model)
 
 # when we use the original network structure as a start
 hill_climbing_model <- hc(x= observed_data, start = network_structure)
-plot(fitted_model_structure)
+plot(fitted_model)
