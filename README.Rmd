@@ -55,7 +55,8 @@ Try introducing evidence that contradicts the CPTs and check for the system's re
 
 ```{r inconsistent_inference}
 inconsistent_inference <- cpquery(bn_fitted, event = (TreesOnFarm == "No"), evidence = (Firewood == "Yes"))
-print(inconsistent_inference)
+
+inconsistent_inference
 ```
 
 This tests the model's behavior when evidence contradicts the dependency structure.
@@ -68,7 +69,8 @@ Example for Livelihoods:
 
 ```{r inference_Livelihoods}
 inference_Livelihoods <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-print(inference_Livelihoods)
+
+inference_Livelihoods
 ```
 
 This should return the probability of improved livelihoods given that the market is high.
@@ -79,7 +81,8 @@ Perform a sensitivity analysis to understand how changes in one or more variable
 
 ```{r sensitivity_analysis}
 sensitivity_analysis <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-print(sensitivity_analysis)
+
+sensitivity_analysis
 ```
 
 ### Simulation and Comparison with Expected Results
@@ -96,7 +99,8 @@ Calculate the observed distribution of 'Livelihoods'.
 
 ```{r observed_Livelihoods}
 observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
-print(observed_Livelihoods)
+
+observed_Livelihoods
 ```
 
 Save the expectation for 'Livelihoods'. 
@@ -116,14 +120,15 @@ data.frame(
 
 Calculate the distribution of 'Timber' given 'TreesOnFarm' (example for other node relationships too).
 
-```{r}
+```{r observed_Timber_given_TreesOnFarm}
 observed_Timber_given_TreesOnFarm <- table(simulated_data$Timber, simulated_data$TreesOnFarm) / nrow(simulated_data)
-print(observed_Timber_given_TreesOnFarm)
+
+observed_Timber_given_TreesOnFarm
 ```
 
 Visualize Livelihoods results. 
 
-```{r}
+```{r simulated_data_plot}
 library(ggplot2)
 
 ggplot(simulated_data, aes(x = Livelihoods)) +
