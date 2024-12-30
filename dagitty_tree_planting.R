@@ -2,8 +2,7 @@
 library(dagitty)
 
 # Define the causal model as a DAG
-dag <- dagitty("
-dag {
+dag <- dagitty(" {
   TreesOnFarm -> Timber
   TreesOnFarm -> Firewood
   TreesOnFarm -> Shade
