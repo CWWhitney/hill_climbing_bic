@@ -46,3 +46,28 @@ for interventions aimed at enhancing livelihoods through agroforestry.
 # Plot the DAG
 plot(dag)
 ```
+
+We build the same graph in `bnlearn` for use in that environment. See
+all the custom CPTs in `model_in_bnlearn.R`.
+
+``` r
+source("model_in_bnlearn.R")
+#> 
+#> Attaching package: 'bnlearn'
+#> The following objects are masked from 'package:dagitty':
+#> 
+#>     ancestors, children, descendants, parents, spouses
+#> Probability of improved livelihoods given trees on farm:  0.4090296
+plot(network_structure)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+Perform inference by calculating the probability of “Livelihoods” being
+“Improved” given “Trees on Farm”.
+
+``` r
+inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
+cat("Probability of improved livelihoods given trees on farm: ", inference_result, "\n")
+#> Probability of improved livelihoods given trees on farm:  0.4211052
+```
