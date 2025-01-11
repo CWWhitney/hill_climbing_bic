@@ -96,7 +96,7 @@ Example for Livelihoods:
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-#> [1] 0.7346804
+#> [1] 0.7133639
 ```
 
 This should return the probability of improved livelihoods given that
@@ -111,7 +111,7 @@ Livelihoods.
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-#> [1] 0.6787432
+#> [1] 0.674278
 ```
 
 ### Simulation and Comparison with Expected Results
@@ -123,20 +123,20 @@ with expected or known results.
 # Simulate 1000 samples
 simulated_data <- rbn(bn_fitted, n = 1000)
 head(simulated_data)
-#>   Benefits Costs ExternalRisks Firewood Fruit Habitat Livelihoods Market Shade
-#> 1     High  High          High       No   Yes     Yes    Improved   High   Yes
-#> 2     High   Low          High      Yes    No     Yes    Improved    Low   Yes
-#> 3      Low  High           Low      Yes   Yes      No    Improved   High   Yes
-#> 4     High   Low          High      Yes    No     Yes    Improved    Low   Yes
-#> 5      Low  High          High      Yes   Yes     Yes    Improved    Low    No
-#> 6     High  High           Low      Yes   Yes     Yes    Improved   High    No
+#>   Benefits Costs ExternalRisks Firewood Fruit Habitat  Livelihoods Market Shade
+#> 1      Low  High          High       No    No      No     Improved    Low   Yes
+#> 2     High  High           Low       No    No      No Not Improved   High    No
+#> 3     High  High          High       No   Yes      No Not Improved   High   Yes
+#> 4      Low  High          High       No    No      No Not Improved    Low    No
+#> 5     High  High           Low      Yes   Yes     Yes Not Improved   High    No
+#> 6      Low  High           Low       No    No     Yes     Improved    Low   Yes
 #>   Timber TreeDiversity
-#> 1    Yes          High
-#> 2     No          High
-#> 3    Yes          High
-#> 4    Yes          High
+#> 1    Yes           Low
+#> 2    Yes           Low
+#> 3    Yes           Low
+#> 4    Yes           Low
 #> 5    Yes          High
-#> 6    Yes          High
+#> 6    Yes           Low
 ```
 
 Calculate the observed distribution of ‘Livelihoods’.
@@ -147,7 +147,7 @@ observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
 observed_Livelihoods
 #> 
 #>     Improved Not Improved 
-#>        0.669        0.331
+#>        0.677        0.323
 ```
 
 Save the expectation for ‘Livelihoods’.
@@ -164,8 +164,8 @@ data.frame(
   "Expected" = expected_Livelihoods
 )
 #>              Observed.Var1 Observed.Freq Expected
-#> Improved          Improved         0.669      0.7
-#> Not Improved  Not Improved         0.331      0.3
+#> Improved          Improved         0.677      0.7
+#> Not Improved  Not Improved         0.323      0.3
 ```
 
 Calculate the distribution of ‘Timber’ given ‘TreeDiversity’ (example
@@ -175,8 +175,8 @@ for other node relationships too).
 table(simulated_data$Timber, simulated_data$TreeDiversity) / nrow(simulated_data)
 #>      
 #>        High   Low
-#>   Yes 0.424 0.468
-#>   No  0.100 0.008
+#>   Yes 0.413 0.501
+#>   No  0.081 0.005
 ```
 
 Visualize Livelihoods results.
@@ -263,8 +263,8 @@ library(bnlearn)
 
 We used the score-based structure learning algorithm from `bnlearn` to
 learn the structure of a Bayesian network using a hill-climbing
-algorithm. We used the observed data from the 5 papers with some missing
-values (NA) for unobserved nodes.
+algorithm. We used the observed data from the publications with some
+missing values (NA) for unobserved nodes.
 
 ``` r
 source("data/observed_data.R")

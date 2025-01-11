@@ -144,7 +144,7 @@ Agroforestry’s potential to address multiple livelihood and environmental chal
 library(bnlearn)
 ```
 
-We used the score-based structure learning algorithm from `bnlearn` to learn the structure of a Bayesian network using a hill-climbing algorithm. We used the observed data from the 5 papers with some missing values (NA) for unobserved nodes. 
+We used the score-based structure learning algorithm from `bnlearn` to learn the structure of a Bayesian network using a hill-climbing algorithm. We used the observed data from the publications with some missing values (NA) for unobserved nodes. 
 
 ```{r observed_data}
 source("data/observed_data.R")
