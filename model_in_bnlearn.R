@@ -5,15 +5,15 @@ library(bnlearn)
 # Define the Bayesian Network structure manually for the DAG
 # (11 nodes, 19 arcs)
 model_string <- "
- [TreesOnFarm]
+ [TreeDiversity]
  [ExternalRisks]
- [Timber | TreesOnFarm]
- [Fruit | TreesOnFarm]
- [Firewood | TreesOnFarm]
+ [Timber | TreeDiversity]
+ [Fruit | TreeDiversity]
+ [Firewood | TreeDiversity]
  [Market | Timber:Firewood:Fruit]
- [Shade | TreesOnFarm]
- [Habitat | TreesOnFarm]
- [Costs | Timber:Firewood:Fruit:TreesOnFarm]
+ [Shade | TreeDiversity]
+ [Habitat | TreeDiversity]
+ [Costs | Timber:Firewood:Fruit:TreeDiversity]
  [Benefits | Market:Shade:Habitat:ExternalRisks]
  [Livelihoods | Costs:Benefits:ExternalRisks]
 "
@@ -31,63 +31,63 @@ network_structure <- model2network(model_string_no_spaces)
 # Define the CPTs for each node based on expert knowledge
 # Assuming the variables have two states: Yes/No for binary variables, and Low/High for costs and benefits
 
-# 1. TreesOnFarm has no parents (Yes/No) ####
-cpt_TreesOnFarm <- matrix(c(0.5, # TreesOnFarm = Yes
-                            0.5), # TreesOnFarm = No
-                          ncol = 2, dimnames = list(NULL, c("Yes", "No")))
+# 1. TreeDiversity has no parents (Yes/No) ####
+cpt_TreeDiversity <- matrix(c(0.5, # TreeDiversity = Yes
+                            0.5), # TreeDiversity = No
+                          ncol = 2, dimnames = list(NULL, c("High", "Low")))
 
-# 2. Timber depends on TreesOnFarm (Yes/No) ####
-# Define CPT for Timber with 2 states for TreesOnFarm and 2 states for Timber
-cpt_Timber <- matrix(c(0.8, # TreesOnFarm = Yes & Timber:Yes,
-                       0.2, #TreesOnFarm = Yes & Timber: No
+# 2. Timber depends on TreeDiversity (Yes/No) ####
+# Define CPT for Timber with 2 states for TreeDiversity and 2 states for Timber
+cpt_Timber <- matrix(c(0.8, # TreeDiversity = Yes & Timber:Yes,
+                       0.2, #TreeDiversity = Yes & Timber: No
                        # hard to imagine timber without trees
-                       0.99, # TreesOnFarm = No & Timber: Yes
-                       0.01), # TreesOnFarm = No, Timber: No
+                       0.99, # TreeDiversity = No & Timber: Yes
+                       0.01), # TreeDiversity = No, Timber: No
                      ncol = 2)
 
-# Set the dimension to have 2 rows (for Timber) and 2 columns (for TreesOnFarm)
+# Set the dimension to have 2 rows (for Timber) and 2 columns (for TreeDiversity)
 dim(cpt_Timber) <- c(2, 2)
 
 # Define dimnames for the matrix
 dimnames(cpt_Timber) <- list(
   "Timber" = c("Yes", "No"), # States for the Timber node
-  "TreesOnFarm" = c("Yes", "No")   # States for the TreesOnFarm node
+  "TreeDiversity" = c("High", "Low")   # States for the TreeDiversity node
 )
 
-# 3. Fruit depends on TreesOnFarm (Yes/No) ####
-# Define CPT for Fruit with 2 states for TreesOnFarm and 2 states for Fruit
-cpt_Fruit <- matrix(c(0.7, # TreesOnFarm = Yes, Fruit: Yes
-                      0.3, # TreesOnFarm = Yes, Fruit: No
+# 3. Fruit depends on TreeDiversity (Yes/No) ####
+# Define CPT for Fruit with 2 states for TreeDiversity and 2 states for Fruit
+cpt_Fruit <- matrix(c(0.7, # TreeDiversity = Yes, Fruit: Yes
+                      0.3, # TreeDiversity = Yes, Fruit: No
                       # can still grow fruit without trees
-                      0.2, # TreesOnFarm = No, Fruit: Yes
-                      0.8), # TreesOnFarm = No, Fruit: No
+                      0.2, # TreeDiversity = No, Fruit: Yes
+                      0.8), # TreeDiversity = No, Fruit: No
                     ncol = 2)
 
-# Set the dimension to have 2 rows (for Yes/No) and 2 columns (for TreesOnFarm)
+# Set the dimension to have 2 rows (for Yes/No) and 2 columns (for TreeDiversity)
 dim(cpt_Fruit) <- c(2, 2)
 
 # Define dimnames for the matrix
 dimnames(cpt_Fruit) <- list(
   "Fruit" = c("Yes", "No"), # States for the Fruit node
-  "TreesOnFarm" = c("Yes", "No")   # States for the TreesOnFarm node
+  "TreeDiversity" = c("High", "Low")   # States for the TreeDiversity node
 )
 
-# 4. Firewood depends on TreesOnFarm (Yes/No) ####
-# Define CPT for Firewood with 2 states for TreesOnFarm and 2 states for Firewood
-cpt_Firewood <- matrix(c(0.7, # TreesOnFarm = Yes, Firewood: Yes
-                         0.3, # TreesOnFarm = Yes, Firewood: No
+# 4. Firewood depends on TreeDiversity (Yes/No) ####
+# Define CPT for Firewood with 2 states for TreeDiversity and 2 states for Firewood
+cpt_Firewood <- matrix(c(0.7, # TreeDiversity = Yes, Firewood: Yes
+                         0.3, # TreeDiversity = Yes, Firewood: No
                          # hard to imagine firewood without trees
-                         0.01, # TreesOnFarm = No, Firewood: Yes
-                         0.99), # TreesOnFarm = No, Firewood: No
+                         0.01, # TreeDiversity = No, Firewood: Yes
+                         0.99), # TreeDiversity = No, Firewood: No
                        ncol = 2)
 
-# Set the dimension to have 2 rows (for Firewood) and 2 columns (for TreesOnFarm)
+# Set the dimension to have 2 rows (for Firewood) and 2 columns (for TreeDiversity)
 dim(cpt_Firewood) <- c(2, 2)
 
 # Define dimnames for the matrix
 dimnames(cpt_Firewood) <- list(
   "Firewood" = c("Yes", "No"), # States for the Firewood node
-  "TreesOnFarm" = c("Yes", "No") # States for the TreesOnFarm node
+  "TreeDiversity" = c("High", "Low") # States for the TreeDiversity node
 )
 
 # 5. Market depends on Timber, Firewood, and Fruit ####
@@ -127,95 +127,95 @@ dimnames(cpt_Market) <- list(
   "Fruit" = c("Yes", "No")
 )
 
-# 6. Shade depends on TreesOnFarm (Yes/No) ####
-# Define CPT for Shade with 2 states for TreesOnFarm and 2 states for Shade
-cpt_Shade <- matrix(c(0.5, 0.5, # TreesOnFarm = Yes, Shade: Yes/No
-                      0.5, 0.5), # TreesOnFarm = No, Shade: Yes/No
+# 6. Shade depends on TreeDiversity (Yes/No) ####
+# Define CPT for Shade with 2 states for TreeDiversity and 2 states for Shade
+cpt_Shade <- matrix(c(0.5, 0.5, # TreeDiversity = Yes, Shade: Yes/No
+                      0.5, 0.5), # TreeDiversity = No, Shade: Yes/No
                     ncol = 2)
 
-# Set the dimension to have 2 rows (for Shade) and 2 columns (for TreesOnFarm)
+# Set the dimension to have 2 rows (for Shade) and 2 columns (for TreeDiversity)
 dim(cpt_Shade) <- c(2, 2)
 
 # Define dimnames for the matrix
 dimnames(cpt_Shade) <- list(
   "Shade" = c("Yes", "No"),  # States for the Shade node
-  "TreesOnFarm" = c("Yes", "No")   # States for the TreesOnFarm node
+  "TreeDiversity" = c("High", "Low")   # States for the TreeDiversity node
 )
 
-# 7. Habitat depends on TreesOnFarm (Yes/No) ####
-# Define CPT for Habitat with 2 states for TreesOnFarm and 2 states for Habitat
+# 7. Habitat depends on TreeDiversity (Yes/No) ####
+# Define CPT for Habitat with 2 states for TreeDiversity and 2 states for Habitat
 cpt_Habitat <- matrix(c(0.95, # habitat yes when trees on farm
                         0.05, # habitat no when trees on farm
                         0.2, # habitat yes when no trees on farm
                         0.8), # habitat no when no trees on farm
                       ncol = 2)
 
-# Set the dimension to have 2 rows (for Habitat) and 2 columns (for TreesOnFarm)
+# Set the dimension to have 2 rows (for Habitat) and 2 columns (for TreeDiversity)
 dim(cpt_Habitat) <- c(2, 2)
 
 # Define dimnames for the matrix
 dimnames(cpt_Habitat) <- list(
   "Habitat" = c("Yes", "No"),  # States for the Habitat node
-  "TreesOnFarm" = c("Yes", "No") # States for the TreesOnFarm node
+  "TreeDiversity" = c("High", "Low") # States for the TreeDiversity node
 )
 
-# 8. Costs depend on TreesOnFarm, Timber, Firewood, and Fruit ####
-# Define the CPT for Costs with combinations of TreesOnFarm, Timber, Firewood, and Fruit (in c() format)
+# 8. Costs depend on TreeDiversity, Timber, Firewood, and Fruit ####
+# Define the CPT for Costs with combinations of TreeDiversity, Timber, Firewood, and Fruit (in c() format)
 cpt_Costs <- c(
-  # Firewood = Yes, Fruit = Yes, TreesOnFarm = Yes
+  # Firewood = Yes, Fruit = Yes, TreeDiversity = Yes
   0.65, # costs high when Timber: Yes
   0.35, # costs low when Timber: Yes
   0.35, # costs high when Timber: No
   0.65, # costs low when Timber: No
-  # Firewood = No, Fruit = Yes, TreesOnFarm = Yes
+  # Firewood = No, Fruit = Yes, TreeDiversity = Yes
   0.6, # costs high when Timber: Yes
   0.4, # costs low when Timber: Yes
   0.4, # costs high when Timber: No
   0.6, # costs low when Timber: No
-  # Firewood = Yes, Fruit = No, TreesOnFarm = Yes
+  # Firewood = Yes, Fruit = No, TreeDiversity = Yes
   0.65, # costs high when Timber: Yes
   0.35, # costs low when Timber: Yes
   0.35, # costs high when Timber: No
   0.65, # costs low when Timber: No
-  # Firewood = No, Fruit = No, TreesOnFarm = Yes
+  # Firewood = No, Fruit = No, TreeDiversity = Yes
   0.65, # costs high when Timber: Yes
   0.35, # costs low when Timber: Yes
   0.35, # costs high when Timber: No
   0.65, # costs low when Timber: No
-  # Firewood = Yes, Fruit = Yes, TreesOnFarm = No
+  # Firewood = Yes, Fruit = Yes, TreeDiversity = No
   # with no trees the rest of these cost estimates are hard to guage
   0.7, # costs high when Timber: Yes
   0.3, # costs low when Timber: Yes
   0.3, # costs high when Timber: No
   0.7, # costs low when Timber: No
-  # Firewood = No, Fruit = Yes, TreesOnFarm = No
+  # Firewood = No, Fruit = Yes, TreeDiversity = No
   0.7, # costs high when Timber: Yes
   0.3, # costs low when Timber: Yes
   0.3, # costs high when Timber: No
   0.7, # costs low when Timber: No
-  # Firewood = Yes, Fruit = No, TreesOnFarm = No
+  # Firewood = Yes, Fruit = No, TreeDiversity = No
   0.7, # costs high when Timber: Yes
   0.3, # costs low when Timber: Yes
   0.3, # costs high when Timber: No
   0.7, # costs low when Timber: No
-  # Firewood = No, Fruit = No, TreesOnFarm = No
+  # Firewood = No, Fruit = No, TreeDiversity = No
   0.7, # costs high when Timber: Yes
   0.3, # costs low when Timber: Yes
   0.3, # costs high when Timber: No
   0.7 # costs low when Timber: No
 )
 
-# Set the dimensions of the matrix (16 combinations of TreesOnFarm, Timber, Firewood, and Fruit, and 2 outcomes: High, Low)
+# Set the dimensions of the matrix (16 combinations of TreeDiversity, Timber, Firewood, and Fruit, and 2 outcomes: High, Low)
 dim(cpt_Costs) <- c(2, 2, 2, 2, 2)
 
 # Assign the correct dimnames (16 combinations of parent nodes, 2 outcomes for Costs)
-# [Costs | Timber:Firewood:Fruit:TreesOnFarm]
+# [Costs | Timber:Firewood:Fruit:TreeDiversity]
 dimnames(cpt_Costs) <- list(
   "Costs" = c("High", "Low"),
   "Timber" = c("Yes", "No"),
   "Firewood" = c("Yes", "No"),
   "Fruit" = c("Yes", "No"),
-  "TreesOnFarm" = c("Yes", "No")
+  "TreeDiversity" = c("High", "Low")
 )
 
 # 9. ExternalRisks has no parents, simple distribution (Yes/No) ####
@@ -325,7 +325,7 @@ dimnames(cpt_Livelihoods) <- list(
 # Fit the Bayesian Network with the CPTs using custom.fit()
 bn_fitted <- custom.fit(network_structure,
                         dist = list(
-                          TreesOnFarm = cpt_TreesOnFarm,
+                          TreeDiversity = cpt_TreeDiversity,
                           Timber = cpt_Timber,
                           Fruit = cpt_Fruit,
                           Firewood = cpt_Firewood,
@@ -341,5 +341,5 @@ bn_fitted <- custom.fit(network_structure,
 bn_fitted
 
 # Perform inference (e.g., calculate the probability of "Livelihoods" being "Improved" given "Trees on Farm")
-inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
+inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "Yes"))
 cat("Probability of improved livelihoods given trees on farm: ", inference_result, "\n")
