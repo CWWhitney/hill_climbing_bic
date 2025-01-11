@@ -1,5 +1,6 @@
 ---
 output: github_document
+bibliography: refs/hill_climbing.bib
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -13,11 +14,9 @@ knitr::opts_chunk$set(
 
 # Hill Climbing as test for causal model
 
-We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from five publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
+We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms, to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from five publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
 
 We aim to build a predictive decision model that connects causal relationships between planting trees on farms and farmer livelihoods. The process has three main steps: 1. searching available literature to define the key causal relationships related to planting trees on farms. A Directed Acyclic Graph (DAG) will be constructed to visually represent these relationships, incorporating various factors like costs, benefits, risks, and their impact on livelihoods, 2. the causal model will be translated into a BN. Literature results will be used to fill in the Conditional Probability Tables (CPTs) for each node in the BN, providing the probability distributions based on available data, 3. once the Bayesian Network is constructed, data will be gathered (even if minimal) to test and refine the model. The hill climbing algorithm will be applied to optimize the model's parameters by adjusting them to best fit the observed data. The optimization process will focus on maximizing the model’s predictive accuracy and identifying the most likely causal relationships. The work demonstrates a robust and adaptable decision model.
-
-
 
 ```{r plot_dagitty}
   source("dagitty_tree_planting.R")
@@ -37,22 +36,18 @@ plot(network_structure)
 Calculate the probability of "Livelihoods" being "Improved" given "Trees on Farm". 
 
 ```{r inference_result}
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
-
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "Yes"))
 ```
 
 To validate our Bayesian Network, we can perform several tests to ensure that the model behaves as expected and that the conditional dependencies between the nodes are correctly represented. 
 
 ### Test for inconsistent Evidence
 
-Here we introduce evidence that contradicts the CPTs to check for the system response. A node conditioned on one state `TreesOnFarm == "No"`, but the evidence `Firewood == "Yes"` conflicts with that, it should return a very low or zero probability (for each iteration of the model).
+Here we introduce evidence that contradicts the dependency structure to check for the system response. A node conditioned on one state `TreeDiversity == "No"`, but the evidence `Firewood == "Yes"` conflicts with `bn_fitted`, it should return a very low or zero probability (for each iteration of the model). 
 
 ```{r inconsistent_inference}
-cpquery(bn_fitted, event = (TreesOnFarm == "No"), evidence = (Firewood == "Yes"))
-
+cpquery(bn_fitted, event = (TreeDiversity == "No"), evidence = (Firewood == "Yes"))
 ```
-
-This tests the model's behavior when evidence contradicts the dependency structure.
 
 ### Query for Node Probabilities
 
@@ -109,10 +104,10 @@ data.frame(
 )
 ```
 
-Calculate the distribution of 'Timber' given 'TreesOnFarm' (example for other node relationships too).
+Calculate the distribution of 'Timber' given 'TreeDiversity' (example for other node relationships too).
 
-```{r observed_Timber_given_TreesOnFarm}
-table(simulated_data$Timber, simulated_data$TreesOnFarm) / nrow(simulated_data)
+```{r observed_Timber_given_TreeDiversity}
+table(simulated_data$Timber, simulated_data$TreeDiversity) / nrow(simulated_data)
 
 ```
 
@@ -132,29 +127,21 @@ ggplot(simulated_data, aes(x = Livelihoods)) +
 
 Learn the structure of a Bayesian network using a hill-climbing algorithm `hc`. 
 
-The observations for the are based on reports from 5 publications:
+The observations for the are based on reports from the literature:
 
-- "Agroforestry for Sustainable Development: Evidence from Smallholder Farms in
- Sub-Saharan Africa" (FAO Report): data about tree planting systems, timber,
- firewood, fruit, and market access in Sub-Saharan Africa. insight into whether
- these systems are beneficial and whether they are contributing to improved
- livelihoods.
+Agroforestry introduces both initial and ongoing costs, including planting, labor, and pruning, which can constrain adoption, particularly for resource-poor farmers. External factors, such as market access, extension services, and credit availability, significantly influence these costs, as demonstrated in studies on farmer-managed natural regeneration in Niger (@haglund_dry_2011) and agroforestry practices in sloping lands of Asia and the Pacific (@craswell_agroforestry_1997). Bureaucratic inefficiencies and limited market alternatives also add to these challenges (@akter_agroforestry_2022).
 
-- "Impact of Agroforestry Systems on Livelihoods: A Case Study in Central
- India":  data on how agroforestry affects the livelihoods of smallholder
- farmers, including income from timber, firewood, and fruit production.
+Despite the costs, agroforestry provides substantial benefits to farmers. It enhances access to food, timber, fuelwood, and fodder, directly improving livelihood capitals, as observed in tropical moist forests in Bangladesh (@akter_agroforestry_2022). Agroforestry supports biodiversity conservation, soil fertility, and carbon sequestration, making it a key strategy for climate change mitigation and adaptation in Sub-Saharan Africa (@verchot_climate_2007; @bogale_sustainability_2023). In Ethiopia, smallholder farmers benefit from improved productivity and diversified income streams through agroforestry (@amare_agroforestry_2019), while in Kenya, agroforestry has bolstered household food security, particularly in regions prone to wildlife crop raiding (@quandt_agroforestry_2021). Agroforestry systems also provide resilience to environmental stressors by diversifying income sources and creating favorable microclimates (@ngango_does_2024; @bishaw_farmers_2013).
 
-- "The Role of Agroforestry in Climate Change Adaptation and Mitigation" (IPCC
- Report):  data on external risks such as climate change, and how different
- agroforestry systems mitigate these risks `fill the "ExternalRisks" column`
+However, agroforestry is not without risks. Farmers face challenges such as reduced crop yields due to competition for water, nutrients, and light, as well as exposure to fluctuating market conditions (@do_adapting_2024; @akter_agroforestry_2022). These risks are compounded by adoption barriers, including insecure land tenure and lack of institutional support (@hughes_assessing_2020; @johansson_mapping_2013).
 
-- "Socioeconomic Impacts of Agroforestry on Farmers: A Longitudinal Study":
- detailed information on market access, income sources (such as timber,
- firewood, and fruit), and how these affect costs and benefits
+The interplay of costs, benefits, and risks ultimately determines the impact of agroforestry on livelihoods. While high costs and risks can hinder adoption and sustainability, the benefits—such as increased resilience, economic returns, and ecosystem services—can offset these challenges (@quandt_agroforestry_2021; @awazi_agroforestry_2020). External factors like cooperative memberships and extension services significantly shape the outcomes of agroforestry systems (@ngango_does_2024; @bishaw_farmers_2013).
 
-- "Agroforestry and Sustainable Land Management: A Study in Southeast Asia":
- insight into the habitat services provided by agroforestry, such as
- biodiversity, as well as its economic impacts
+Empirical evidence underscores these dynamics. Research in Bangladesh highlights agroforestry’s positive impacts on livelihoods despite systemic inefficiencies (@akter_agroforestry_2022), while studies in Ethiopia and Kenya demonstrate agroforestry's role in reducing livelihood risks and enhancing resilience to environmental stressors (@amare_agroforestry_2019; @bishaw_farmers_2013). In Cameroon, agroforestry has been shown to mitigate farmer–grazier conflicts, promoting social and economic stability (@awazi_agroforestry_2020). Similarly, agroforestry practices in Tanzania reveal that social and ecological factors, such as tree survival rates and community perceptions, influence the sustainability of these systems (@johansson_mapping_2013).
+
+Agroforestry’s potential to address multiple livelihood and environmental challenges is clear, but its success depends on targeted policy interventions to reduce costs, mitigate risks, and enhance benefits, ensuring equitable access and scalability across diverse contexts.
+
+
 
 ```{r hill_climbing}
 # Example with hill climbing (using bnlearn)
@@ -164,19 +151,8 @@ library(bnlearn)
 We used the score-based structure learning algorithm from `bnlearn` to learn the structure of a Bayesian network using a hill-climbing algorithm. We used the observed data from the 5 papers with some missing values (NA) for unobserved nodes. 
 
 ```{r observed_data}
-observed_data <- data.frame(
-  TreesOnFarm = c("Yes", "No", "Yes", "Yes", "Yes"),
-  Timber = c("Yes", "No", "Yes", "No", "Yes"),
-  Firewood = c("Yes", NA, "No", "Yes", NA),
-  Fruit = c("No", "No", NA, "No", "Yes"),
-  Market = c(NA, "High", "High", "Low", "High"),
-  Shade = c("Yes", "No", "Yes", NA, "No"),
-  Habitat = c("Yes", NA, "No", "Yes", "No"),
-  ExternalRisks = c("Low", "High", "High", "Low", "Low"),
-  Costs = c("High", "Low", "Low", NA, "High"),
-  Benefits = c("Low", "High", "Low", "High", NA),
-  Livelihoods = c(NA, "Improved", "Improved", "Not Improved", "Improved")
-)
+source("data/observed_data.R")
+observed_data
 ```
 
 Convert all the character columns from our observations into factors for the hill climbing. 
@@ -184,7 +160,7 @@ Convert all the character columns from our observations into factors for the hil
 ```{r convert_columns}
 
 # Convert character columns to factors
-observed_data$TreesOnFarm <- as.factor(observed_data$TreesOnFarm)
+observed_data$TreeDiversity <- as.factor(observed_data$TreeDiversity)
 observed_data$Timber <- as.factor(observed_data$Timber)
 observed_data$Firewood <- as.factor(observed_data$Firewood)
 observed_data$Fruit <- as.factor(observed_data$Fruit)
@@ -215,3 +191,5 @@ hill_climbing_model <- hc(x= observed_data, start = network_structure)
 plot(hill_climbing_model)
 
 ```
+
+# References
