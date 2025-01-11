@@ -215,5 +215,3 @@ hill_climbing_model <- hc(x= observed_data, start = network_structure)
 plot(hill_climbing_model)
 
 ```
-
-
