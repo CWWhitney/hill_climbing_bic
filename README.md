@@ -53,7 +53,7 @@ source("model_in_bnlearn.R")
 #> The following objects are masked from 'package:dagitty':
 #> 
 #>     ancestors, children, descendants, parents, spouses
-#> Probability of improved livelihoods given trees on farm:  0.6999399
+#> Probability of improved livelihoods given trees on farm:  0.6901063
 plot(network_structure)
 ```
 
@@ -66,7 +66,7 @@ on Farm”.
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
-#> [1] 0.6885475
+#> [1] 0.7102147
 ```
 
 To validate our Bayesian Network, we can perform several tests to ensure
@@ -82,7 +82,7 @@ return a very low or zero probability (for each iteration of the model).
 
 ``` r
 cpquery(bn_fitted, event = (TreesOnFarm == "No"), evidence = (Firewood == "Yes"))
-#> [1] 0.01272476
+#> [1] 0.01442716
 ```
 
 This tests the model’s behavior when evidence contradicts the dependency
@@ -98,7 +98,7 @@ Example for Livelihoods:
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-#> [1] 0.7158442
+#> [1] 0.7365746
 ```
 
 This should return the probability of improved livelihoods given that
@@ -113,7 +113,7 @@ Livelihoods.
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-#> [1] 0.673317
+#> [1] 0.6726038
 ```
 
 ### Simulation and Comparison with Expected Results
@@ -126,18 +126,18 @@ with expected or known results.
 simulated_data <- rbn(bn_fitted, n = 1000)
 head(simulated_data)
 #>   Benefits Costs ExternalRisks Firewood Fruit Habitat  Livelihoods Market Shade
-#> 1      Low  High           Low       No    No      No     Improved   High    No
-#> 2      Low   Low          High       No    No      No     Improved    Low   Yes
-#> 3     High   Low          High       No    No      No Not Improved   High   Yes
-#> 4     High   Low           Low       No    No     Yes     Improved   High   Yes
-#> 5     High  High          High      Yes   Yes      No     Improved   High   Yes
-#> 6     High   Low          High       No    No     Yes Not Improved   High    No
+#> 1      Low  High          High       No    No     Yes Not Improved   High   Yes
+#> 2     High   Low          High       No   Yes     Yes     Improved   High    No
+#> 3     High   Low          High      Yes   Yes     Yes Not Improved   High   Yes
+#> 4      Low   Low          High       No   Yes     Yes Not Improved   High    No
+#> 5     High   Low          High       No    No      No     Improved   High   Yes
+#> 6     High  High          High       No    No      No     Improved   High    No
 #>   Timber TreesOnFarm
 #> 1    Yes          No
 #> 2    Yes          No
-#> 3    Yes          No
-#> 4    Yes          No
-#> 5    Yes         Yes
+#> 3     No         Yes
+#> 4    Yes         Yes
+#> 5    Yes          No
 #> 6    Yes          No
 ```
 
@@ -149,7 +149,7 @@ observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
 observed_Livelihoods
 #> 
 #>     Improved Not Improved 
-#>        0.668        0.332
+#>        0.683        0.317
 ```
 
 Save the expectation for ‘Livelihoods’.
@@ -166,8 +166,8 @@ data.frame(
   "Expected" = expected_Livelihoods
 )
 #>              Observed.Var1 Observed.Freq Expected
-#> Improved          Improved         0.668      0.7
-#> Not Improved  Not Improved         0.332      0.3
+#> Improved          Improved         0.683      0.7
+#> Not Improved  Not Improved         0.317      0.3
 ```
 
 Calculate the distribution of ‘Timber’ given ‘TreesOnFarm’ (example for
@@ -177,8 +177,8 @@ other node relationships too).
 table(simulated_data$Timber, simulated_data$TreesOnFarm) / nrow(simulated_data)
 #>      
 #>         Yes    No
-#>   Yes 0.412 0.492
-#>   No  0.090 0.006
+#>   Yes 0.411 0.495
+#>   No  0.086 0.008
 ```
 
 Visualize Livelihoods results.
@@ -274,7 +274,7 @@ Plot the fitted model with the data from the papers only.
 
 ``` r
 source("model_in_bnlearn.R")
-#> Probability of improved livelihoods given trees on farm:  0.6989398
+#> Probability of improved livelihoods given trees on farm:  0.7053481
 # x in hc = the observations alone
 fitted_model <- hc(observed_data)
 plot(fitted_model)
@@ -283,7 +283,8 @@ plot(fitted_model)
 ![](README_files/figure-gfm/fitted_model-1.png)<!-- -->
 
 Plot the model based on both our model structure and the literature when
-we use the original network structure as a start.
+we use the original network structure as a `start`. This is a `class bn`
+object. It shows DAG and we use it to initialize the `hc` algorithm.
 
 ``` r
 # x in hc = the observations 

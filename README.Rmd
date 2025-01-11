@@ -206,7 +206,7 @@ fitted_model <- hc(observed_data)
 plot(fitted_model)
 ```
 
-Plot the model based on both our model structure and the literature when we use the original network structure as a start. 
+Plot the model based on both our model structure and the literature when we use the original network structure as a `start`. This is a `class bn` object. It shows DAG and we use it to initialize the `hc` algorithm. 
 
 ```{r hill_climbing_model}
 # x in hc = the observations 
