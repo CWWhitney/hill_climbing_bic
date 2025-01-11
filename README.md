@@ -3,38 +3,34 @@
 
 # Hill Climbing as test for causal model
 
-Project Description:
+We apply causal inference techniques, expert-elicited probabilities, and
+optimization algorithms to improve decision-making for interventions
+aimed at enhancing livelihoods through agroforestry. We use a
+hill-climbing algorithm to learn the structure of a Bayesian Network
+(BN) based on observed data. The observed data contains information from
+five publications, each contributing to various factors that may
+influence agroforestry systems and livelihoods in different regions. The
+goal is to use this data to infer the best network structure that best
+explains the dependencies among the variables in the dataset. See the
+details in `hill_climbing.R`.
 
-This project aims to build a predictive decision model that connects
-causal relationships between planting trees on farms and farmer
-livelihoods. The process will unfold in three main steps:
-
-Defining the Problem and Building a Causal Model: The first step
-involves engaging experts and utilizing available literature to define
-the key causal relationships related to the intervention (e.g., planting
-trees on farms). A Directed Acyclic Graph (DAG) will be constructed to
-visually represent these relationships, incorporating various factors
-like costs, benefits, risks, and their impact on livelihoods.
-
-Creating a Predictive Decision Model Using Expert Elicitation: In this
-phase, the causal model will be translated into a Bayesian Network (BN).
-Expert elicitation will be used to fill in the Conditional Probability
-Tables (CPTs) for each node in the BN, providing the probability
-distributions based on expert knowledge and available data.
-
-Testing the Model with Hill Climbing Optimization: Once the Bayesian
-Network is constructed, data will be gathered (even if minimal) to test
-and refine the model. The hill climbing algorithm will be applied to
-optimize the model’s parameters by adjusting them to best fit the
-observed data. The optimization process will focus on maximizing the
+We aim to build a predictive decision model that connects causal
+relationships between planting trees on farms and farmer livelihoods.
+The process has three main steps: 1. searching available literature to
+define the key causal relationships related to planting trees on farms.
+A Directed Acyclic Graph (DAG) will be constructed to visually represent
+these relationships, incorporating various factors like costs, benefits,
+risks, and their impact on livelihoods, 2. the causal model will be
+translated into a BN. Literature results will be used to fill in the
+Conditional Probability Tables (CPTs) for each node in the BN, providing
+the probability distributions based on available data, 3. once the
+Bayesian Network is constructed, data will be gathered (even if minimal)
+to test and refine the model. The hill climbing algorithm will be
+applied to optimize the model’s parameters by adjusting them to best fit
+the observed data. The optimization process will focus on maximizing the
 model’s predictive accuracy and identifying the most likely causal
-relationships.
-
-This approach integrates both qualitative insights from experts and
-quantitative data, allowing for a robust and adaptable decision model.
-The project will leverage causal inference techniques, expert-elicited
-probabilities, and optimization algorithms to improve decision-making
-for interventions aimed at enhancing livelihoods through agroforestry.
+relationships. The work demonstrates a robust and adaptable decision
+model.
 
 ``` r
   source("dagitty_tree_planting.R")
@@ -57,7 +53,7 @@ source("model_in_bnlearn.R")
 #> The following objects are masked from 'package:dagitty':
 #> 
 #>     ancestors, children, descendants, parents, spouses
-#> Probability of improved livelihoods given trees on farm:  0.692138
+#> Probability of improved livelihoods given trees on farm:  0.6980869
 plot(network_structure)
 ```
 
@@ -69,28 +65,24 @@ Calculate the probability of “Livelihoods” being “Improved” given “Tre
 on Farm”.
 
 ``` r
-inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
-
-cat("Probability of improved livelihoods given trees on farm: ", inference_result, "\n")
-#> Probability of improved livelihoods given trees on farm:  0.7094287
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreesOnFarm == "Yes"))
+#> [1] 0.6990851
 ```
 
 To validate our Bayesian Network, we can perform several tests to ensure
 that the model behaves as expected and that the conditional dependencies
 between the nodes are correctly represented.
 
-### Inconsistent Evidence
+### Test for inconsistent Evidence
 
-Try introducing evidence that contradicts the CPTs and check for the
-system’s response. For example, if a node is conditioned on one state,
-but the evidence conflicts with that, it should return a very low or
-zero probability.
+Here we introduce evidence that contradicts the CPTs to check for the
+system response. A node conditioned on one state `TreesOnFarm == "No"`,
+but the evidence `Firewood == "Yes"` conflicts with that, it should
+return a very low or zero probability (for each iteration of the model).
 
 ``` r
-inconsistent_inference <- cpquery(bn_fitted, event = (TreesOnFarm == "No"), evidence = (Firewood == "Yes"))
-
-inconsistent_inference
-#> [1] 0.01186776
+cpquery(bn_fitted, event = (TreesOnFarm == "No"), evidence = (Firewood == "Yes"))
+#> [1] 0.01787259
 ```
 
 This tests the model’s behavior when evidence contradicts the dependency
@@ -105,10 +97,8 @@ probability distribution for Livelihoods.
 Example for Livelihoods:
 
 ``` r
-inference_Livelihoods <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-
-inference_Livelihoods
-#> [1] 0.7245798
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
+#> [1] 0.7304929
 ```
 
 This should return the probability of improved livelihoods given that
@@ -122,15 +112,13 @@ Firewood or Timber and see how it affects the probability of
 Livelihoods.
 
 ``` r
-sensitivity_analysis <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-
-sensitivity_analysis
-#> [1] 0.6726867
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
+#> [1] 0.678157
 ```
 
 ### Simulation and Comparison with Expected Results
 
-Generate synthetic data based on our network structure and compare it
+Generate synthetic data based on the network structure and compare it
 with expected or known results.
 
 ``` r
@@ -138,18 +126,18 @@ with expected or known results.
 simulated_data <- rbn(bn_fitted, n = 1000)
 head(simulated_data)
 #>   Benefits Costs ExternalRisks Firewood Fruit Habitat  Livelihoods Market Shade
-#> 1     High  High          High      Yes    No     Yes Not Improved   High    No
-#> 2     High  High          High       No    No     Yes     Improved    Low    No
-#> 3     High  High           Low       No   Yes      No     Improved   High   Yes
-#> 4      Low  High           Low      Yes    No     Yes     Improved    Low   Yes
-#> 5     High  High          High       No    No      No     Improved   High   Yes
-#> 6     High  High          High       No    No     Yes Not Improved   High   Yes
+#> 1     High   Low          High      Yes    No      No     Improved   High    No
+#> 2     High   Low           Low       No    No      No     Improved   High   Yes
+#> 3      Low  High          High       No   Yes      No Not Improved    Low   Yes
+#> 4     High  High           Low       No    No      No     Improved   High    No
+#> 5     High  High           Low      Yes   Yes     Yes Not Improved   High    No
+#> 6     High  High          High      Yes   Yes     Yes Not Improved   High   Yes
 #>   Timber TreesOnFarm
-#> 1    Yes         Yes
-#> 2    Yes         Yes
+#> 1    Yes          No
+#> 2    Yes          No
 #> 3    Yes          No
-#> 4    Yes         Yes
-#> 5    Yes          No
+#> 4    Yes          No
+#> 5    Yes         Yes
 #> 6    Yes         Yes
 ```
 
@@ -161,7 +149,7 @@ observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
 observed_Livelihoods
 #> 
 #>     Improved Not Improved 
-#>        0.685        0.315
+#>        0.686        0.314
 ```
 
 Save the expectation for ‘Livelihoods’.
@@ -178,21 +166,19 @@ data.frame(
   "Expected" = expected_Livelihoods
 )
 #>              Observed.Var1 Observed.Freq Expected
-#> Improved          Improved         0.685      0.7
-#> Not Improved  Not Improved         0.315      0.3
+#> Improved          Improved         0.686      0.7
+#> Not Improved  Not Improved         0.314      0.3
 ```
 
 Calculate the distribution of ‘Timber’ given ‘TreesOnFarm’ (example for
 other node relationships too).
 
 ``` r
-observed_Timber_given_TreesOnFarm <- table(simulated_data$Timber, simulated_data$TreesOnFarm) / nrow(simulated_data)
-
-observed_Timber_given_TreesOnFarm
+table(simulated_data$Timber, simulated_data$TreesOnFarm) / nrow(simulated_data)
 #>      
 #>         Yes    No
-#>   Yes 0.409 0.480
-#>   No  0.106 0.005
+#>   Yes 0.389 0.509
+#>   No  0.096 0.006
 ```
 
 Visualize Livelihoods results.
@@ -213,21 +199,97 @@ ggplot(simulated_data, aes(x = Livelihoods)) +
 Learn the structure of a Bayesian network using a hill-climbing
 algorithm `hc`.
 
+The observations for the are based on reports from 5 publications:
+
+- “Agroforestry for Sustainable Development: Evidence from Smallholder
+  Farms in Sub-Saharan Africa” (FAO Report): data about tree planting
+  systems, timber, firewood, fruit, and market access in Sub-Saharan
+  Africa. insight into whether these systems are beneficial and whether
+  they are contributing to improved livelihoods.
+
+- “Impact of Agroforestry Systems on Livelihoods: A Case Study in
+  Central India”: data on how agroforestry affects the livelihoods of
+  smallholder farmers, including income from timber, firewood, and fruit
+  production.
+
+- “The Role of Agroforestry in Climate Change Adaptation and Mitigation”
+  (IPCC Report): data on external risks such as climate change, and how
+  different agroforestry systems mitigate these risks
+  `fill the "ExternalRisks" column`
+
+- “Socioeconomic Impacts of Agroforestry on Farmers: A Longitudinal
+  Study”: detailed information on market access, income sources (such as
+  timber, firewood, and fruit), and how these affect costs and benefits
+
+- “Agroforestry and Sustainable Land Management: A Study in Southeast
+  Asia”: insight into the habitat services provided by agroforestry,
+  such as biodiversity, as well as its economic impacts
+
 ``` r
-source("hill_climbing.R")
-#> Probability of improved livelihoods given trees on farm:  0.7024559
+# Example with hill climbing (using bnlearn)
+library(bnlearn)
 ```
 
-![](README_files/figure-gfm/hill_climbing-1.png)<!-- -->
+We used the score-based structure learning algorithm from `bnlearn` to
+learn the structure of a Bayesian network using a hill-climbing
+algorithm. We used the observed data from the 5 papers with some missing
+values (NA) for unobserved nodes.
 
 ``` r
+observed_data <- data.frame(
+  TreesOnFarm = c("Yes", "No", "Yes", "Yes", "Yes"),
+  Timber = c("Yes", "No", "Yes", "No", "Yes"),
+  Firewood = c("Yes", NA, "No", "Yes", NA),
+  Fruit = c("No", "No", NA, "No", "Yes"),
+  Market = c(NA, "High", "High", "Low", "High"),
+  Shade = c("Yes", "No", "Yes", NA, "No"),
+  Habitat = c("Yes", NA, "No", "Yes", "No"),
+  ExternalRisks = c("Low", "High", "High", "Low", "Low"),
+  Costs = c("High", "Low", "Low", NA, "High"),
+  Benefits = c("Low", "High", "Low", "High", NA),
+  Livelihoods = c(NA, "Improved", "Improved", "Not Improved", "Improved")
+)
+```
+
+Convert all the character columns from our observations into factors for
+the hill climbing.
+
+``` r
+
+# Convert character columns to factors
+observed_data$TreesOnFarm <- as.factor(observed_data$TreesOnFarm)
+observed_data$Timber <- as.factor(observed_data$Timber)
+observed_data$Firewood <- as.factor(observed_data$Firewood)
+observed_data$Fruit <- as.factor(observed_data$Fruit)
+observed_data$Market <- as.factor(observed_data$Market)
+observed_data$Shade <- as.factor(observed_data$Shade)
+observed_data$Habitat <- as.factor(observed_data$Habitat)
+observed_data$ExternalRisks <- as.factor(observed_data$ExternalRisks)
+observed_data$Costs <- as.factor(observed_data$Costs)
+observed_data$Benefits <- as.factor(observed_data$Benefits)
+observed_data$Livelihoods <- as.factor(observed_data$Livelihoods)
+```
+
+Plot the fitted model with the data from the papers only.
+
+``` r
+source("model_in_bnlearn.R")
+#> Probability of improved livelihoods given trees on farm:  0.6915755
+# x in hc = the observations alone
+fitted_model <- hc(observed_data)
 plot(fitted_model)
 ```
 
-Using a hill-climbing algorithm to learn the structure of a Bayesian
-Network (BN) based on observed data. The observed data contains
-information from five publications, each contributing to various factors
-that may influence agroforestry systems and livelihoods in different
-regions. The goal is to use this data to infer the best network
-structure that best explains the dependencies among the variables in the
-dataset. See the details in `hill_climbing.R`.
+![](README_files/figure-gfm/fitted_model-1.png)<!-- -->
+
+Plot the model based on both our model structure and the literature when
+we use the original network structure as a start.
+
+``` r
+# x in hc = the observations 
+# start = the original network structure 
+hill_climbing_model <- hc(x= observed_data, start = network_structure)
+plot(hill_climbing_model)
+```
+
+![](README_files/figure-gfm/hill_climbing_model-1.png)<!-- -->
