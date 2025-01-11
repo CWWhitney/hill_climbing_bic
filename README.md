@@ -8,11 +8,11 @@ optimization algorithms, to improve decision-making for interventions
 aimed at enhancing livelihoods through agroforestry. We use a
 hill-climbing algorithm to learn the structure of a Bayesian Network
 (BN) based on observed data. The observed data contains information from
-five publications, each contributing to various factors that may
-influence agroforestry systems and livelihoods in different regions. The
-goal is to use this data to infer the best network structure that best
-explains the dependencies among the variables in the dataset. See the
-details in `hill_climbing.R`.
+publications, each contributing to various factors that may influence
+agroforestry systems and livelihoods in different regions. The goal is
+to use this data to infer the best network structure that best explains
+the dependencies among the variables in the dataset. See the details in
+`hill_climbing.R`.
 
 We aim to build a predictive decision model that connects causal
 relationships between planting trees on farms and farmer livelihoods.
@@ -33,7 +33,7 @@ relationships. The work demonstrates a robust and adaptable decision
 model.
 
 ``` r
-  source("dagitty_tree_planting.R")
+  source("functions/dagitty_tree_planting.R")
 ```
 
 ![](README_files/figure-gfm/plot_dagitty-1.png)<!-- -->
@@ -47,7 +47,7 @@ We build the same graph in `bnlearn` for use in that environment. See
 all the custom CPTs in `model_in_bnlearn.R`.
 
 ``` r
-source("model_in_bnlearn.R")
+source("functions/model_in_bnlearn.R")
 #> 
 #> Attaching package: 'bnlearn'
 #> The following objects are masked from 'package:dagitty':
@@ -96,7 +96,7 @@ Example for Livelihoods:
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-#> [1] 0.7109233
+#> [1] 0.7346804
 ```
 
 This should return the probability of improved livelihoods given that
@@ -111,7 +111,7 @@ Livelihoods.
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-#> [1] 0.6789298
+#> [1] 0.6787432
 ```
 
 ### Simulation and Comparison with Expected Results
@@ -123,17 +123,17 @@ with expected or known results.
 # Simulate 1000 samples
 simulated_data <- rbn(bn_fitted, n = 1000)
 head(simulated_data)
-#>   Benefits Costs ExternalRisks Firewood Fruit Habitat  Livelihoods Market Shade
-#> 1      Low  High          High      Yes    No     Yes     Improved    Low    No
-#> 2     High  High          High      Yes   Yes     Yes     Improved   High   Yes
-#> 3     High   Low          High      Yes   Yes     Yes     Improved   High   Yes
-#> 4     High  High           Low      Yes   Yes     Yes     Improved   High    No
-#> 5     High  High          High       No   Yes     Yes     Improved   High    No
-#> 6     High   Low          High      Yes    No     Yes Not Improved   High    No
+#>   Benefits Costs ExternalRisks Firewood Fruit Habitat Livelihoods Market Shade
+#> 1     High  High          High       No   Yes     Yes    Improved   High   Yes
+#> 2     High   Low          High      Yes    No     Yes    Improved    Low   Yes
+#> 3      Low  High           Low      Yes   Yes      No    Improved   High   Yes
+#> 4     High   Low          High      Yes    No     Yes    Improved    Low   Yes
+#> 5      Low  High          High      Yes   Yes     Yes    Improved    Low    No
+#> 6     High  High           Low      Yes   Yes     Yes    Improved   High    No
 #>   Timber TreeDiversity
-#> 1     No          High
-#> 2    Yes          High
-#> 3     No          High
+#> 1    Yes          High
+#> 2     No          High
+#> 3    Yes          High
 #> 4    Yes          High
 #> 5    Yes          High
 #> 6    Yes          High
@@ -147,7 +147,7 @@ observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
 observed_Livelihoods
 #> 
 #>     Improved Not Improved 
-#>        0.659        0.341
+#>        0.669        0.331
 ```
 
 Save the expectation for ‘Livelihoods’.
@@ -164,8 +164,8 @@ data.frame(
   "Expected" = expected_Livelihoods
 )
 #>              Observed.Var1 Observed.Freq Expected
-#> Improved          Improved         0.659      0.7
-#> Not Improved  Not Improved         0.341      0.3
+#> Improved          Improved         0.669      0.7
+#> Not Improved  Not Improved         0.331      0.3
 ```
 
 Calculate the distribution of ‘Timber’ given ‘TreeDiversity’ (example
@@ -175,8 +175,8 @@ for other node relationships too).
 table(simulated_data$Timber, simulated_data$TreeDiversity) / nrow(simulated_data)
 #>      
 #>        High   Low
-#>   Yes 0.394 0.500
-#>   No  0.098 0.008
+#>   Yes 0.424 0.468
+#>   No  0.100 0.008
 ```
 
 Visualize Livelihoods results.
@@ -218,18 +218,18 @@ making it a key strategy for climate change mitigation and adaptation in
 Sub-Saharan Africa (Verchot et al. (2007); Bogale and Bekele (2023)). In
 Ethiopia, smallholder farmers benefit from improved productivity and
 diversified income streams through agroforestry (Amare et al. (2019)),
-while in Kenya, agroforestry has bolstered household food security,
+while in Kenya, agroforestry can increase household food security,
 particularly in regions prone to wildlife crop raiding (Quandt (2021)).
 Agroforestry systems also provide resilience to environmental stressors
 by diversifying income sources and creating favorable microclimates
 (Ngango et al. (2024); Bishaw (2013)).
 
-However, agroforestry is not without risks. Farmers face challenges such
-as reduced crop yields due to competition for water, nutrients, and
-light, as well as exposure to fluctuating market conditions (Do et al.
-(2024); Akter et al. (2022)). These risks are compounded by adoption
-barriers, including insecure land tenure and lack of institutional
-support (Hughes et al. (2020); Johansson, Axelsson, and Kimanzu (2013)).
+However, farmers can also face challenges such as reduced crop yields
+due to competition for water, nutrients, and light, as well as exposure
+to fluctuating market conditions (Do et al. (2024); Akter et al.
+(2022)). These risks are compounded by adoption barriers, including
+insecure land tenure and lack of institutional support (Hughes et al.
+(2020); Johansson, Axelsson, and Kimanzu (2013)).
 
 The interplay of costs, benefits, and risks ultimately determines the
 impact of agroforestry on livelihoods. While high costs and risks can
@@ -238,20 +238,17 @@ resilience, economic returns, and ecosystem services—can offset these
 challenges (Quandt (2021); Awazi and Avana-Tientcheu (2020)). External
 factors like cooperative memberships and extension services
 significantly shape the outcomes of agroforestry systems (Ngango et al.
-(2024); Bishaw (2013)).
-
-Empirical evidence underscores these dynamics. Research in Bangladesh
-highlights agroforestry’s positive impacts on livelihoods despite
-systemic inefficiencies (Akter et al. (2022)), while studies in Ethiopia
-and Kenya demonstrate agroforestry’s role in reducing livelihood risks
-and enhancing resilience to environmental stressors (Amare et al.
-(2019); Bishaw (2013)). In Cameroon, agroforestry has been shown to
-mitigate farmer–grazier conflicts, promoting social and economic
-stability (Awazi and Avana-Tientcheu (2020)). Similarly, agroforestry
-practices in Tanzania reveal that social and ecological factors, such as
-tree survival rates and community perceptions, influence the
-sustainability of these systems (Johansson, Axelsson, and Kimanzu
-(2013)).
+(2024); Bishaw (2013)). Research in Bangladesh highlights agroforestry’s
+positive impacts on livelihoods despite systemic inefficiencies (Akter
+et al. (2022)), while studies in Ethiopia and Kenya demonstrate
+agroforestry’s role in reducing livelihood risks and enhancing
+resilience to environmental stress (Amare et al. (2019); Bishaw (2013)).
+In Cameroon, agroforestry has been shown to mitigate conflict between
+farmers and pastoralists, promoting social and economic stability (Awazi
+and Avana-Tientcheu (2020)). Similarly, agroforestry practices in
+Tanzania reveal that social and ecological factors, such as tree
+survival rates and community perceptions, influence the sustainability
+of these systems (Johansson, Axelsson, and Kimanzu (2013)).
 
 Agroforestry’s potential to address multiple livelihood and
 environmental challenges is clear, but its success depends on targeted
@@ -271,35 +268,6 @@ values (NA) for unobserved nodes.
 
 ``` r
 source("data/observed_data.R")
-observed_data
-#>    TreeDiversity Timber Firewood Fruit Market Shade Habitat ExternalRisks Costs
-#> 1           High    Yes      Yes   Yes   High   Yes     Yes          High  High
-#> 2            Low    Yes       No    No   <NA>  <NA>     Yes           Low   Low
-#> 3            Low     No      Yes    No   High   Yes      No          High  High
-#> 4           High    Yes      Yes   Yes    Low   Yes     Yes           Low  High
-#> 5           High    Yes       No    No   High   Yes      No          High  <NA>
-#> 6            Low    Yes      Yes   Yes   High   Yes     Yes          High   Low
-#> 7            Low     No      Yes    No    Low    No     Yes           Low  High
-#> 8           High    Yes       No   Yes   High   Yes     Yes           Low   Low
-#> 9            Low    Yes      Yes  <NA>   High  <NA>     Yes          High  High
-#> 10          High    Yes      Yes   Yes    Low   Yes      No          High   Low
-#> 11           Low    Yes      Yes  <NA>   High   Yes     Yes           Low  High
-#> 12          High     No      Yes    No   High   Yes     Yes          High  High
-#> 13          High    Yes      Yes   Yes   High   Yes     Yes           Low  High
-#>    Benefits  Livelihoods
-#> 1      High     Improved
-#> 2       Low     Improved
-#> 3      High Not Improved
-#> 4      High     Improved
-#> 5      High     Improved
-#> 6      High Not Improved
-#> 7       Low     Improved
-#> 8      High Not Improved
-#> 9       Low     Improved
-#> 10     High Not Improved
-#> 11      Low     Improved
-#> 12     High     Improved
-#> 13      Low     Improved
 ```
 
 Convert all the character columns from our observations into factors for
@@ -324,7 +292,7 @@ observed_data$Livelihoods <- as.factor(observed_data$Livelihoods)
 Plot the fitted model with the data from the papers only.
 
 ``` r
-source("model_in_bnlearn.R")
+source("functions/model_in_bnlearn.R")
 #> Probability of improved livelihoods given trees on farm:  0
 # x in hc = the observations alone
 fitted_model <- hc(observed_data)

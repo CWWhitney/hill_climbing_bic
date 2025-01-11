@@ -14,12 +14,12 @@ knitr::opts_chunk$set(
 
 # Hill Climbing as test for causal model
 
-We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms, to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from five publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
+We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms, to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
 
 We aim to build a predictive decision model that connects causal relationships between planting trees on farms and farmer livelihoods. The process has three main steps: 1. searching available literature to define the key causal relationships related to planting trees on farms. A Directed Acyclic Graph (DAG) will be constructed to visually represent these relationships, incorporating various factors like costs, benefits, risks, and their impact on livelihoods, 2. the causal model will be translated into a BN. Literature results will be used to fill in the Conditional Probability Tables (CPTs) for each node in the BN, providing the probability distributions based on available data, 3. once the Bayesian Network is constructed, data will be gathered (even if minimal) to test and refine the model. The hill climbing algorithm will be applied to optimize the model's parameters by adjusting them to best fit the observed data. The optimization process will focus on maximizing the model’s predictive accuracy and identifying the most likely causal relationships. The work demonstrates a robust and adaptable decision model.
 
 ```{r plot_dagitty}
-  source("dagitty_tree_planting.R")
+  source("functions/dagitty_tree_planting.R")
 # Plot the DAG
 plot(dag)
 ```
@@ -27,7 +27,7 @@ plot(dag)
 We build the same graph in `bnlearn` for use in that environment. See all the custom CPTs in `model_in_bnlearn.R`. 
 
 ```{r plot_network_structure}
-source("model_in_bnlearn.R")
+source("functions/model_in_bnlearn.R")
 plot(network_structure)
 ```
 
@@ -131,17 +131,13 @@ The observations for the are based on reports from the literature:
 
 Agroforestry introduces both initial and ongoing costs, including planting, labor, and pruning, which can constrain adoption, particularly for resource-poor farmers. External factors, such as market access, extension services, and credit availability, significantly influence these costs, as demonstrated in studies on farmer-managed natural regeneration in Niger (@haglund_dry_2011) and agroforestry practices in sloping lands of Asia and the Pacific (@craswell_agroforestry_1997). Bureaucratic inefficiencies and limited market alternatives also add to these challenges (@akter_agroforestry_2022).
 
-Despite the costs, agroforestry provides substantial benefits to farmers. It enhances access to food, timber, fuelwood, and fodder, directly improving livelihood capitals, as observed in tropical moist forests in Bangladesh (@akter_agroforestry_2022). Agroforestry supports biodiversity conservation, soil fertility, and carbon sequestration, making it a key strategy for climate change mitigation and adaptation in Sub-Saharan Africa (@verchot_climate_2007; @bogale_sustainability_2023). In Ethiopia, smallholder farmers benefit from improved productivity and diversified income streams through agroforestry (@amare_agroforestry_2019), while in Kenya, agroforestry has bolstered household food security, particularly in regions prone to wildlife crop raiding (@quandt_agroforestry_2021). Agroforestry systems also provide resilience to environmental stressors by diversifying income sources and creating favorable microclimates (@ngango_does_2024; @bishaw_farmers_2013).
+Despite the costs, agroforestry provides substantial benefits to farmers. It enhances access to food, timber, fuelwood, and fodder, directly improving livelihood capitals, as observed in tropical moist forests in Bangladesh (@akter_agroforestry_2022). Agroforestry supports biodiversity conservation, soil fertility, and carbon sequestration, making it a key strategy for climate change mitigation and adaptation in Sub-Saharan Africa (@verchot_climate_2007; @bogale_sustainability_2023). In Ethiopia, smallholder farmers benefit from improved productivity and diversified income streams through agroforestry (@amare_agroforestry_2019), while in Kenya, agroforestry can increase household food security, particularly in regions prone to wildlife crop raiding (@quandt_agroforestry_2021). Agroforestry systems also provide resilience to environmental stressors by diversifying income sources and creating favorable microclimates (@ngango_does_2024; @bishaw_farmers_2013).
 
-However, agroforestry is not without risks. Farmers face challenges such as reduced crop yields due to competition for water, nutrients, and light, as well as exposure to fluctuating market conditions (@do_adapting_2024; @akter_agroforestry_2022). These risks are compounded by adoption barriers, including insecure land tenure and lack of institutional support (@hughes_assessing_2020; @johansson_mapping_2013).
+However, farmers can also face challenges such as reduced crop yields due to competition for water, nutrients, and light, as well as exposure to fluctuating market conditions (@do_adapting_2024; @akter_agroforestry_2022). These risks are compounded by adoption barriers, including insecure land tenure and lack of institutional support (@hughes_assessing_2020; @johansson_mapping_2013).
 
-The interplay of costs, benefits, and risks ultimately determines the impact of agroforestry on livelihoods. While high costs and risks can hinder adoption and sustainability, the benefits—such as increased resilience, economic returns, and ecosystem services—can offset these challenges (@quandt_agroforestry_2021; @awazi_agroforestry_2020). External factors like cooperative memberships and extension services significantly shape the outcomes of agroforestry systems (@ngango_does_2024; @bishaw_farmers_2013).
-
-Empirical evidence underscores these dynamics. Research in Bangladesh highlights agroforestry’s positive impacts on livelihoods despite systemic inefficiencies (@akter_agroforestry_2022), while studies in Ethiopia and Kenya demonstrate agroforestry's role in reducing livelihood risks and enhancing resilience to environmental stressors (@amare_agroforestry_2019; @bishaw_farmers_2013). In Cameroon, agroforestry has been shown to mitigate farmer–grazier conflicts, promoting social and economic stability (@awazi_agroforestry_2020). Similarly, agroforestry practices in Tanzania reveal that social and ecological factors, such as tree survival rates and community perceptions, influence the sustainability of these systems (@johansson_mapping_2013).
+The interplay of costs, benefits, and risks ultimately determines the impact of agroforestry on livelihoods. While high costs and risks can hinder adoption and sustainability, the benefits—such as increased resilience, economic returns, and ecosystem services—can offset these challenges (@quandt_agroforestry_2021; @awazi_agroforestry_2020). External factors like cooperative memberships and extension services significantly shape the outcomes of agroforestry systems (@ngango_does_2024; @bishaw_farmers_2013). Research in Bangladesh highlights agroforestry’s positive impacts on livelihoods despite systemic inefficiencies (@akter_agroforestry_2022), while studies in Ethiopia and Kenya demonstrate agroforestry's role in reducing livelihood risks and enhancing resilience to environmental stress (@amare_agroforestry_2019; @bishaw_farmers_2013). In Cameroon, agroforestry has been shown to mitigate conflict between farmers and pastoralists, promoting social and economic stability (@awazi_agroforestry_2020). Similarly, agroforestry practices in Tanzania reveal that social and ecological factors, such as tree survival rates and community perceptions, influence the sustainability of these systems (@johansson_mapping_2013).
 
 Agroforestry’s potential to address multiple livelihood and environmental challenges is clear, but its success depends on targeted policy interventions to reduce costs, mitigate risks, and enhance benefits, ensuring equitable access and scalability across diverse contexts.
-
-
 
 ```{r hill_climbing}
 # Example with hill climbing (using bnlearn)
@@ -152,7 +148,6 @@ We used the score-based structure learning algorithm from `bnlearn` to learn the
 
 ```{r observed_data}
 source("data/observed_data.R")
-observed_data
 ```
 
 Convert all the character columns from our observations into factors for the hill climbing. 
@@ -176,7 +171,7 @@ observed_data$Livelihoods <- as.factor(observed_data$Livelihoods)
 Plot the fitted model with the data from the papers only. 
 
 ```{r fitted_model}
-source("model_in_bnlearn.R")
+source("functions/model_in_bnlearn.R")
 # x in hc = the observations alone
 fitted_model <- hc(observed_data)
 plot(fitted_model)
