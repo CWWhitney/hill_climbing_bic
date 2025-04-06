@@ -62,6 +62,8 @@ The resulting 89 refs are in the `bib\causal_refs.bib` file
 
 <!-- Note: Human-in-the-loop (HITL) machine learning is a collaborative approach that integrates human input and expertise into the lifecycle of machine learning (ML) and artificial intelligence systems. -->
 
+We also searched for the more general topic:
+
 ```plaintext
 Title: 
 ("causal structure" OR "Bayesian networks" OR "Markov Decision Process")
@@ -200,7 +202,6 @@ ggraph(term_network, layout = "fr") +
 
 ```
 
-
 Use Latent Dirichlet Allocation (LDA) to group papers into thematic clusters.
 
 ```{r}
@@ -285,7 +286,7 @@ representative_papers <- high_impact_papers %>%
 print(representative_papers)
 
 # Save as CSV for further review
-write_csv(representative_papers, "representative_papers_summary.csv")
+write_csv(representative_papers, "data/representative_papers_summary.csv")
 
 ```
 
