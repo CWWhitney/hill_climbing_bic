@@ -1,0 +1,438 @@
+---
+title: "Literature Review on Causal Discovery and Decision Modeling"
+author: "Cory Whitney"
+output: html_document
+bibliography:   
+      - "bib/causal_refs.bib"
+      - "bib/causal_refs2.bib"
+csl: apa.csl 
+---
+
+```{r setup, include=FALSE}
+library(bib2df)
+library(dplyr)
+library(tidyr)
+library(tidytext)
+
+library(igraph)
+library(ggraph)
+
+library(readr)
+
+library(stringr)
+library(readr)
+
+```
+
+# Introduction
+
+This review explores causal discovery methods that integrate expert knowledge, particularly within **Markov Decision Processes (MDP)** and **Bayesian Networks**.
+
+The objective is to build and assess methods for 
+- learning causal structures from data
+- Integrating expert opinion into model structure
+- Supporting decision-making (esp. development / SDG contexts)
+- Applying and adapting Markov Decision Processes and Bayesian models
+
+# Search Query for Science Direct
+
+We conducted a structured literature search in Science Direct using two queries to identify studies on causal discovery, expert knowledge integration, and decision modeling.
+
+The Title search focused on core concepts to ensure relevance, including causal structure, causal discovery, causal inference, Bayesian methods, and Markov Decision Processes.
+
+The Title, Abstract, and Keywords search expanded the scope to include studies discussing expert knowledge, expert elicitation, human-in-the-loop approaches, decision modeling, reinforcement learning, and optimization.
+
+To refine results, we focused on subject areas such as Decision Science, Computer Science, and Social Sciences. 
+
+To collect relevant literature, the following **Boolean search query** was used in [Science Direct](https://www.sciencedirect.com/) advanced search:
+
+```plaintext
+Title: 
+("causal structure" OR "causal discovery" OR "causal inference" OR "Bayesian" OR "Markov Decision Process")
+
+Title Abstract, Keywords: 
+("causal " OR "Bayesian" OR "Markov")
+AND 
+("expert knowledge" OR "expert elicitation" OR "human-in-the-loop")
+AND 
+("decision modeling" OR "reinforcement learning" OR "optimization")
+```
+
+The resulting 89 refs are in the `bib\causal_refs.bib` file 
+
+<!-- Note: Human-in-the-loop (HITL) machine learning is a collaborative approach that integrates human input and expertise into the lifecycle of machine learning (ML) and artificial intelligence systems. -->
+
+```plaintext
+Title: 
+("causal structure" OR "Bayesian networks" OR "Markov Decision Process")
+
+Title Abstract, Keywords: 
+("causal" OR "Bayesian" OR "Markov")
+AND 
+("expert" OR  "domain")
+AND 
+("decision" OR "optimization")
+AND 
+("policy" OR "development")
+```
+
+The resulting 252 refs are in the `bib\causal_refs2.bib` file 
+
+## Load and Process BibTeX File
+
+```{r}
+# Load both BibTeX files
+bib1 <- bib2df::bib2df("bib/causal_refs.bib")
+bib2 <- bib2df::bib2df("bib/causal_refs2.bib")
+
+# Combine the two datasets
+bib_data <- bind_rows(bib1, bib2)
+
+# Remove duplicate entries (if any) based on the citation key
+bib_data <- bib_data %>% distinct(BIBTEXKEY, .keep_all = TRUE)
+
+# Optionally, save the combined file as a new BibTeX file
+bib2df::df2bib(bib_data, file = "bib/combined_refs.bib")
+```
+
+## Remove duplicates
+
+```{r remove_duplicates}
+bib_data <- bib_data %>% distinct(DOI, .keep_all = TRUE)
+
+bib_data %>% select(BIBTEXKEY, TITLE, AUTHOR, YEAR, DOI) %>% arrange(desc(YEAR))
+
+```
+
+Resulting in `r nrow(bib_data)` unique papers. 
+
+# Tokenize with bigrams
+
+```{r}
+bib_data <- bib_data %>%
+  mutate(fulltext = paste(tolower(TITLE), tolower(ABSTRACT), tolower(KEYWORDS), sep = " "))
+
+bigrams <- bib_data %>%
+  unnest_tokens(bigram, fulltext, token = "ngrams", n = 2)
+
+# Filter for terms like "bayesian model", "fuzzy method", etc.
+bigrams %>%
+  filter(str_detect(bigram, "model|method|approach")) %>%
+  count(bigram, sort = TRUE) %>%
+  filter(n > 2)
+```
+
+# Filter
+
+Filter for high impact journals
+
+```{r high_impact}
+# Define a list of high-impact journals
+high_impact_journals <- c("Nature", "Science", "PNAS", "Artificial Intelligence", 
+                           "Journal of Machine Learning Research", "Decision Support Systems", 
+                           "Computers & Chemical Engineering", "Applied Mathematical Modelling")
+
+# Flag high-impact journals
+bib_data <- bib_data %>%
+  mutate(HighImpact = ifelse(JOURNAL %in% high_impact_journals, 1, 0))
+
+# Sort with high-impact journals first, then by year (most recent first)
+bib_data_sorted <- bib_data %>%
+  arrange(desc(HighImpact), desc(YEAR))
+
+# Select relevant fields to display
+bib_data_sorted %>% select(BIBTEXKEY, TITLE, AUTHOR, JOURNAL, YEAR, DOI)
+
+```
+
+## Summary 
+
+```{r high_impact_summary}
+# Filter for high-impact papers
+high_impact_papers <- bib_data_sorted %>% filter(HighImpact == 1)
+
+# Select key fields
+high_impact_summary <- high_impact_papers %>% 
+  select(BIBTEXKEY, TITLE, AUTHOR, YEAR, JOURNAL, ABSTRACT, DOI)
+
+# Save as CSV for easier review
+write_csv(high_impact_summary, "data/high_impact_papers_summary.csv")
+```
+
+
+```{r top_terms}
+
+# Load data
+high_impact_papers <- read_csv("data/high_impact_papers_summary.csv")
+
+# Custom stopword list to remove common words that aren't useful
+custom_stopwords <- c("the", "and", "for", "from", "that", "this", "are", "with", "these", "can", "our", "which", "such", "using", "use", "model", "approach", "study", "data", "first", "show", "time", "world", "however", "based", "often", "solving", "first", "key", "well", "used", "results", "different", "problem", "thus", "also", "high", "real", "number", "propose", "approaches", "method", "making")
+
+# Tokenize and remove stopwords
+clean_tokens <- high_impact_papers %>%
+  unnest_tokens(word, ABSTRACT) %>%
+  anti_join(get_stopwords()) %>%
+  filter(!word %in% custom_stopwords)
+
+# Count top terms
+top_terms <- clean_tokens %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 5)
+
+print(top_terms)
+
+```
+
+## Co-Occurrence Network of Key Terms
+
+```{r}
+# Create term adjacency matrix
+term_network <- clean_tokens %>%
+  count(word) %>%
+  filter(n > 5) %>%
+  graph_from_data_frame()
+
+# Plot network
+ggraph(term_network, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), repel = TRUE)
+
+```
+
+
+Use Latent Dirichlet Allocation (LDA) to group papers into thematic clusters.
+
+```{r}
+library(tidytext)
+library(topicmodels)
+library(dplyr)
+library(tm)
+
+# Create a document-term matrix (DTM) from cleaned abstracts
+docs <- Corpus(VectorSource(high_impact_papers$ABSTRACT))
+dtm <- DocumentTermMatrix(docs, control = list(stopwords = custom_stopwords))
+
+# Fit LDA model with 5 topics
+lda_model <- LDA(dtm, k = 5, control = list(seed = 1234))
+
+# Show top words per topic
+terms(lda_model, 10)
+```
+
+From these topic clusters, we can derive key themes in the existing literature:
+
+- Topic 1: Policy & Expert-Guided Decision Models
+Keywords: policy, decision, expert, agent, policies, problem
+What this tells us: Many papers focus on policy applications and expert-guided decision modeling.
+How this relates to our work: If we are using expert elicitation to inform decision models, this aligns with prior research.
+
+- Topic 2: Bayesian & Optimization Approaches
+Keywords: optimization, transition, Bayesian, decision, algorithm
+What this tells us: Bayesian inference and optimization are dominant methods in decision science.
+How this relates to our work: Are these Bayesian approaches purely data-driven, or do they integrate expert knowledge?
+
+- Topic 3: Problem-Solving in Decision Models
+Keywords: decision, planning, domain, states, problems
+What this tells us: Many papers apply decision science models to specific problems (e.g., planning, state-based decision-making).
+How this relates to our work: We should check if existing models align with our domain or problem type.
+
+- Topic 4: Risk & Constraints in Decision Science
+Keywords: risk, software, learning, constraints, BNs (Bayesian Networks)
+What this tells us: Some papers focus on risk assessment, constraints, and Bayesian Networks (BNs).
+How this relates to our work: If our research involves modeling uncertainty and risk, these papers are relevant.
+
+- Topic 5: Reinforcement Learning & Multi-Echelon Systems
+Keywords: inventory, reinforcement learning, policy, expert, multi-echelon
+What this tells us: There is a strong RL component in decision modeling and supply chain-style problems (multi-echelon).
+How this relates to our work: If we do not use RL, we can position our work differently (e.g., expert-guided vs. learning-based).
+
+```{r}
+library(dplyr)
+library(stringr)
+
+# Define topic categories based on LDA results
+topics <- list(
+  "Policy & Expert-Guided Decision Models" = c("policy", "decision", "expert", "agent", "policies", "problem"),
+  "Bayesian & Optimization Approaches" = c("optimization", "bayesian", "algorithm", "transition", "mdp"),
+  "Problem-Solving in Decision Models" = c("planning", "domain", "states", "problems", "solution"),
+  "Risk & Constraints in Decision Science" = c("risk", "constraints", "bns", "hex", "monotonic"),
+  "Reinforcement Learning & Multi-Echelon Systems" = c("reinforcement", "inventory", "policy", "multi-echelon", "deep")
+)
+
+# Function to assign a topic to each paper based on keywords in the abstract
+assign_topic <- function(abstract) {
+  if (is.na(abstract)) return("Uncategorized")
+  for (topic in names(topics)) {
+    if (any(str_detect(tolower(abstract), topics[[topic]]))) {
+      return(topic)
+    }
+  }
+  return("Uncategorized")
+}
+
+# Apply topic categorization
+high_impact_papers <- high_impact_papers %>%
+  mutate(Topic = sapply(ABSTRACT, assign_topic))
+
+# Select representative papers for each topic (top 3 per category)
+representative_papers <- high_impact_papers %>%
+  group_by(Topic) %>%
+  slice_head(n = 3) %>%
+  select(TITLE, AUTHOR, YEAR, JOURNAL, ABSTRACT, DOI, Topic)
+
+# Print summaries
+print(representative_papers)
+
+# Save as CSV for further review
+write_csv(representative_papers, "representative_papers_summary.csv")
+
+```
+
+# Thematic Review
+
+Thematic Categories for the Review
+
+```{r}
+library(tibble)
+
+tribble(
+  ~Theme, ~Description, ~Keywords,
+  "Causal Discovery from Data", "Algorithms that infer structure from observations", "structure learning, hill climbing, constraint-based, score-based, BIC",
+  "Integration of Expert Opinion", "Combining expert judgment with data-based structure learning", "expert elicitation, prior knowledge, human-in-the-loop, soft constraints",
+  "Performance-Opinion Trade-offs", "Balancing statistical fit vs. expert-believed structure", "performance index, fit vs. interpretability, multi-objective",
+  "Markov Decision Processes (MDP)", "Use of Markov and multi-step decision models", "markov decision process, policy optimization, sequential decision",
+  "Bayesian Decision Models", "Bayesian networks and causal Bayesian models", "bayesian networks, belief networks, causal bayesian models",
+  "Reinforcement Learning for Causal Discovery", "Learning causal structure via reinforcement", "ordering-based, reinforcement learning, causal RL, structure discovery",
+  "Application in Development Contexts", "Application to SDG, policy, or development domains", "theory of change, development policy, sustainable development",
+  "Subjective Judgement Modeling", "Representation of judgment, preferences, or risk tolerance", "subjective probabilities, risk tolerance, preferences, decision support"
+)
+
+
+```
+
+```{r thematic_review}
+
+# Define method categories and keywords
+method_dict <- list(
+  Bayesian = c("bayesian", "bayes net", "probabilistic model", "bns"),
+  Markov = c("markov", "mdp", "partially observable"),
+  Optimization = c("optimization", "solver", "heuristic", "search"),
+  RL = c("reinforcement learning", "policy", "agent", "reward"),
+  Expert = c("expert knowledge", "expert elicitation", "human-in-the-loop"),
+  Causal = c("causal discovery", "causal inference", "structure learning", "dag"),
+  DecisionAnalysis = c("trade-off", "objective", "alternatives", "uncertainty", "consequence"),
+  Hybrid = c("hybrid", "integration", "ensemble"),
+  Simulation = c("monte carlo", "agent-based", "stochastic simulation")
+)
+```
+
+```{r}
+# Combine title + abstract + keywords into one field
+bib_data <- bib_data %>%
+  mutate(fulltext = paste(tolower(TITLE), tolower(ABSTRACT), tolower(KEYWORDS), sep = " "))
+```
+
+```{r}
+# Scan each document for method terms
+for (category in names(method_dict)) {
+  terms <- method_dict[[category]]
+  pattern <- paste(terms, collapse = "|")
+  bib_data[[category]] <- str_detect(bib_data$fulltext, pattern)
+}
+```
+
+```{r}
+# Count frequencies by category
+bib_data %>%
+  select(BIBTEXKEY, all_of(names(method_dict))) %>%
+  pivot_longer(cols = -BIBTEXKEY, names_to = "Method", values_to = "Used") %>%
+  filter(Used == TRUE) %>%
+  count(Method, sort = TRUE)
+```
+
+```{r}
+# Count how many methods each paper uses
+bib_data %>%
+  mutate(Method_Count = rowSums(select(., all_of(names(method_dict))) == TRUE)) %>%
+  select(BIBTEXKEY, Method_Count)
+
+```
+
+Build a thematic count table 
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidyr)
+
+# Build searchable column
+bib_data <- bib_data %>%
+  mutate(fulltext = paste(tolower(TITLE), tolower(ABSTRACT), tolower(KEYWORDS), sep = " "))
+
+# Add thematic columns
+themes <- list(
+  "Causal Discovery from Data" = c("structure learning", "hill climbing", "constraint-based", "score-based", "bic"),
+  "Integration of Expert Opinion" = c("expert elicitation", "prior knowledge", "human-in-the-loop", "soft constraints"),
+  "Performance-Opinion Trade-offs" = c("performance index", "fit vs. interpretability", "multi-objective"),
+  "Markov Decision Processes (MDP)" = c("markov decision process", "policy optimization", "sequential decision"),
+  "Bayesian Decision Models" = c("bayesian networks", "belief networks", "causal bayesian models"),
+  "Reinforcement Learning for Causal Discovery" = c("ordering-based", "reinforcement learning", "causal rl", "structure discovery"),
+  "Application in Development Contexts" = c("theory of change", "development policy", "sustainable development"),
+  "Subjective Judgement Modeling" = c("subjective probabilities", "risk tolerance", "preferences", "decision support")
+)
+
+# Apply search per theme
+for (theme in names(themes)) {
+  pattern <- paste(themes[[theme]], collapse = "|")
+  bib_data[[theme]] <- str_detect(bib_data$fulltext, pattern)
+}
+
+# Count papers per theme
+theme_counts <- bib_data %>%
+  select(BIBTEXKEY, all_of(names(themes))) %>%
+  pivot_longer(cols = -BIBTEXKEY, names_to = "Theme", values_to = "Used") %>%
+  filter(Used == TRUE) %>%
+  count(Theme, sort = TRUE)
+
+print(theme_counts)
+
+```
+# Co-occurnce
+
+```{r}
+library(reshape2)
+library(igraph)
+library(ggraph)
+
+# Create a binary matrix of themes per paper
+theme_matrix <- bib_data %>%
+  select(BIBTEXKEY, all_of(names(themes))) %>%
+  column_to_rownames("BIBTEXKEY")
+
+# Co-occurrence: cross-product of columns
+co_occurrence <- t(as.matrix(theme_matrix)) %*% as.matrix(theme_matrix)
+
+# Melt to long format for plotting
+co_occurrence_long <- melt(co_occurrence)
+names(co_occurrence_long) <- c("Theme1", "Theme2", "Count")
+co_occurrence_long <- co_occurrence_long %>% filter(Theme1 != Theme2, Count > 0)
+
+# Print co-occurring themes
+print(co_occurrence_long)
+
+```
+
+```{r}
+# Create graph
+graph <- graph_from_data_frame(co_occurrence_long, directed = FALSE)
+
+# Plot
+ggraph(graph, layout = "fr") +
+  geom_edge_link(aes(width = Count), alpha = 0.8) +
+  geom_node_point(size = 5) +
+  geom_node_text(aes(label = name), repel = TRUE) +
+  theme_minimal()
+
+```
+# References
