@@ -5,6 +5,8 @@ required_packages <- c(
   "bnlearn",
   "ggplot2",
   "scales",
+  "httr",
+  "jsonlite",
   "bib2df",
   "dplyr",
   "tidyr",

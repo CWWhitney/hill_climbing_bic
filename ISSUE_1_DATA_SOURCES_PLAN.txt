@@ -1,0 +1,167 @@
+ISSUE 1 - DATA FOR MODEL TESTING (ACTION PLAN)
+
+Goal:
+Build a reproducible observed dataset for BN/hill-climbing model testing using open, citable data sources.
+
+What this issue should produce:
+1) A source shortlist with direct URLs and licensing notes
+2) A variable mapping table from source indicators -> model variables
+3) A first combined CSV with country-year rows and model-ready factor values
+4) A short data notes file documenting assumptions and thresholds
+
+------------------------------------------------------------
+PRIORITIZED DATA SOURCES (USE THESE FIRST)
+
+Tier 1 (high priority, structured, global):
+- FAOSTAT
+  URL: https://www.fao.org/faostat/en/
+  Use for: forestry, production, land use, crop/livestock context
+- World Bank Open Data
+  URL: https://data.worldbank.org/
+  Use for: governance/income/rural development proxies tied to risks and markets
+- Global Forest Watch (GFW)
+  URL: https://www.globalforestwatch.org/
+  Use for: forest cover change, tree cover loss/gain, pressure proxies
+
+Tier 2 (targeted, supporting):
+- FRA (FAO Forest Resources Assessment)
+  URL: https://www.fao.org/forest-resources-assessment/en/
+  Use for: periodic forest assessments and validation checks
+- CIFOR-ICRAF repositories/publications
+  URL: https://www.cifor-icraf.org/
+  Use for: agroforestry-specific context, case studies, and regional indicators
+- Land Matrix
+  URL: https://landmatrix.org/
+  Use for: land investment/tenure pressure proxies (contextual external risk)
+
+Tier 3 (optional / niche):
+- EURAF resources
+- Treepedia (urban tree focus)
+- Other open agroforestry portals with variable data quality
+
+------------------------------------------------------------
+BN VARIABLE MAPPING FRAMEWORK
+
+Target model variables:
+TreeDiversity, Timber, Firewood, Fruit, Market, Shade, Habitat,
+ExternalRisks, Costs, Benefits, Livelihoods
+
+Suggested mapping logic (first pass):
+- TreeDiversity:
+  proxy from tree cover diversity / mixed land-use and agroforestry prevalence metrics
+  binarize to High/Low using percentile threshold (example: top 40% = High)
+
+- Timber, Firewood, Fruit:
+  derive Yes/No from production/availability indicators
+  Yes if indicator > threshold and/or non-zero sustained over selected years
+
+- Market:
+  proxy from market access / value-chain / rural road access / export participation
+  binarize High/Low with documented threshold
+
+- Shade:
+  proxy from canopy/tree density metrics where available
+  Yes/No using threshold
+
+- Habitat:
+  proxy from habitat/forest integrity or biodiversity-related measures
+  Yes/No using threshold
+
+- ExternalRisks:
+  composite from climate shocks, land pressure, governance fragility, volatility
+  High/Low from normalized risk score
+
+- Costs:
+  proxy from input costs, labor constraints, or establishment burden proxies
+  High/Low thresholded
+
+- Benefits:
+  proxy from productivity/income/ecosystem service indicators
+  High/Low thresholded
+
+- Livelihoods:
+  proxy from income/food security/resilience outcomes
+  Improved / Not Improved using defined rule
+
+Important:
+- Every threshold must be written in a notes file and applied consistently.
+- Keep raw numeric columns before binarization for sensitivity testing.
+
+------------------------------------------------------------
+DATA MODEL (FIRST DATASET)
+
+Primary key:
+- country
+- year
+
+Minimum columns:
+- country
+- year
+- source_id (FAOSTAT / WDI / GFW / FRA / etc.)
+- raw_<indicator_name> columns
+- TreeDiversity
+- Timber
+- Firewood
+- Fruit
+- Market
+- Shade
+- Habitat
+- ExternalRisks
+- Costs
+- Benefits
+- Livelihoods
+- data_quality_flag (High/Medium/Low)
+- notes
+
+Output files to create:
+- data/model_testing_raw.csv
+- data/model_testing_processed.csv
+- data/notes_model_testing.md
+
+------------------------------------------------------------
+TASK BREAKDOWN
+
+Task 1 - Finalize source list and indicators
+- choose 2-4 indicators per target variable
+- document exact dataset/table IDs and retrieval links
+
+Task 2 - Pull and normalize raw data
+- standardize country and year keys
+- harmonize units and missing values
+
+Task 3 - Build transformation rules
+- define thresholds for High/Low and Yes/No
+- define composite rules for ExternalRisks, Costs, Benefits, Livelihoods
+
+Task 4 - Export model-ready dataset
+- create processed CSV with exact model factor levels
+- include data_quality_flag and assumption notes
+
+Task 5 - Run model test pass
+- run hill-climbing on processed data
+- record basic fit/structure output and obvious anomalies
+
+------------------------------------------------------------
+DEFINITION OF DONE
+
+Done when:
+- at least 3 high-quality global sources are integrated
+- each model variable has documented indicator mapping
+- processed dataset is reproducible from raw data
+- notes file documents assumptions, thresholds, and caveats
+- model run completes on the processed dataset
+
+------------------------------------------------------------
+SUGGESTED ISSUE LABELS
+
+data, modeling, reproducibility, enhancement
+
+------------------------------------------------------------
+COPY/PASTE COMMENT FOR ISSUE #1 (OPTIONAL)
+
+Proposed implementation scope for this issue:
+1) Use FAOSTAT + World Bank + GFW as core data backbone.
+2) Build a country-year dataset with raw numeric indicators first.
+3) Apply transparent binning rules into BN states (High/Low, Yes/No).
+4) Save raw + processed CSV plus a notes file with thresholds and assumptions.
+5) Run one full hill-climbing pass on the processed data to validate usability.
