@@ -3,6 +3,19 @@
 
 # Hill Climbing as test for causal model
 
+## Quick start (reproducible run)
+
+From the project root:
+
+``` bash
+Rscript scripts/setup_renv.R
+Rscript scripts/run_all.R
+```
+
+The setup script initializes `renv`, installs required packages, and
+writes `renv.lock`. The run script restores package versions from
+`renv.lock` and renders `README.Rmd`.
+
 We apply causal inference techniques, expert-elicited probabilities, and
 optimization algorithms, to improve decision-making for interventions
 aimed at enhancing livelihoods through agroforestry. We use a
@@ -53,7 +66,7 @@ source("functions/model_in_bnlearn.R")
 #> The following objects are masked from 'package:dagitty':
 #> 
 #>     ancestors, children, descendants, parents, spouses
-#> Probability of improved livelihoods given trees on farm:  0
+#> Probability of improved livelihoods given high tree diversity:  0.693154
 plot(network_structure)
 ```
 
@@ -61,12 +74,12 @@ plot(network_structure)
 
 ## Perform inference
 
-Calculate the probability of “Livelihoods” being “Improved” given “Trees
-on Farm”.
+Calculate the probability of “Livelihoods” being “Improved” given high
+tree diversity.
 
 ``` r
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "Yes"))
-#> [1] 0
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "High"))
+#> [1] 0.6934928
 ```
 
 To validate our Bayesian Network, we can perform several tests to ensure
@@ -77,13 +90,13 @@ between the nodes are correctly represented.
 
 Here we introduce evidence that contradicts the dependency structure to
 check for the system response. A node conditioned on one state
-`TreeDiversity == "No"`, but the evidence `Firewood == "Yes"` conflicts
+`TreeDiversity == "Low"`, but the evidence `Firewood == "Yes"` conflicts
 with `bn_fitted`, it should return a very low or zero probability (for
 each iteration of the model).
 
 ``` r
-cpquery(bn_fitted, event = (TreeDiversity == "No"), evidence = (Firewood == "Yes"))
-#> [1] 0
+cpquery(bn_fitted, event = (TreeDiversity == "Low"), evidence = (Firewood == "Yes"))
+#> [1] 0.01380104
 ```
 
 ### Query for Node Probabilities
@@ -96,7 +109,7 @@ Example for Livelihoods:
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-#> [1] 0.7133639
+#> [1] 0.7348718
 ```
 
 This should return the probability of improved livelihoods given that
@@ -111,7 +124,7 @@ Livelihoods.
 
 ``` r
 cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-#> [1] 0.674278
+#> [1] 0.6721055
 ```
 
 ### Simulation and Comparison with Expected Results
@@ -124,22 +137,22 @@ with expected or known results.
 simulated_data <- rbn(bn_fitted, n = 1000)
 head(simulated_data)
 #>   Benefits Costs ExternalRisks Firewood Fruit Habitat  Livelihoods Market Shade
-#> 1      Low  High          High       No    No      No     Improved    Low   Yes
-#> 2     High  High           Low       No    No      No Not Improved   High    No
-#> 3     High  High          High       No   Yes      No Not Improved   High   Yes
-#> 4      Low  High          High       No    No      No Not Improved    Low    No
-#> 5     High  High           Low      Yes   Yes     Yes Not Improved   High    No
-#> 6      Low  High           Low       No    No     Yes     Improved    Low   Yes
+#> 1     High  High           Low       No   Yes     Yes     Improved   High   Yes
+#> 2     High   Low           Low      Yes   Yes     Yes     Improved   High   Yes
+#> 3     High   Low          High      Yes   Yes     Yes     Improved   High   Yes
+#> 4      Low   Low          High       No    No      No Not Improved    Low    No
+#> 5     High  High          High      Yes   Yes     Yes Not Improved   High    No
+#> 6      Low   Low          High       No    No      No     Improved    Low   Yes
 #>   Timber TreeDiversity
-#> 1    Yes           Low
-#> 2    Yes           Low
-#> 3    Yes           Low
+#> 1    Yes          High
+#> 2     No          High
+#> 3    Yes          High
 #> 4    Yes           Low
 #> 5    Yes          High
 #> 6    Yes           Low
 ```
 
-Calculate the observed distribution of ‘Livelihoods’.
+Calculate the observed distribution of ‘Livelihoods.’
 
 ``` r
 observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
@@ -147,10 +160,10 @@ observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
 observed_Livelihoods
 #> 
 #>     Improved Not Improved 
-#>        0.677        0.323
+#>        0.689        0.311
 ```
 
-Save the expectation for ‘Livelihoods’.
+Save the expectation for ‘Livelihoods.’
 
 ``` r
 expected_Livelihoods <- c("Improved" = 0.7, "Not Improved" = 0.3)
@@ -164,8 +177,8 @@ data.frame(
   "Expected" = expected_Livelihoods
 )
 #>              Observed.Var1 Observed.Freq Expected
-#> Improved          Improved         0.677      0.7
-#> Not Improved  Not Improved         0.323      0.3
+#> Improved          Improved         0.689      0.7
+#> Not Improved  Not Improved         0.311      0.3
 ```
 
 Calculate the distribution of ‘Timber’ given ‘TreeDiversity’ (example
@@ -175,8 +188,8 @@ for other node relationships too).
 table(simulated_data$Timber, simulated_data$TreeDiversity) / nrow(simulated_data)
 #>      
 #>        High   Low
-#>   Yes 0.413 0.501
-#>   No  0.081 0.005
+#>   Yes 0.394 0.494
+#>   No  0.106 0.006
 ```
 
 Visualize Livelihoods results.
@@ -274,7 +287,6 @@ Convert all the character columns from our observations into factors for
 the hill climbing.
 
 ``` r
-
 # Convert character columns to factors
 observed_data$TreeDiversity <- as.factor(observed_data$TreeDiversity)
 observed_data$Timber <- as.factor(observed_data$Timber)
@@ -293,7 +305,7 @@ Plot the fitted model with the data from the papers only.
 
 ``` r
 source("functions/model_in_bnlearn.R")
-#> Probability of improved livelihoods given trees on farm:  0
+#> Probability of improved livelihoods given high tree diversity:  0.6926124
 # x in hc = the observations alone
 fitted_model <- hc(observed_data)
 plot(fitted_model)
@@ -316,8 +328,7 @@ plot(hill_climbing_model)
 
 # References
 
-<div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 
 <div id="ref-akter_agroforestry_2022" class="csl-entry">
 
