@@ -340,6 +340,6 @@ bn_fitted <- custom.fit(network_structure,
 # Check the fitted network
 bn_fitted
 
-# Perform inference (e.g., calculate the probability of "Livelihoods" being "Improved" given "Trees on Farm")
-inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "Yes"))
-cat("Probability of improved livelihoods given trees on farm: ", inference_result, "\n")
+# Perform inference (e.g., calculate the probability of "Livelihoods" being "Improved" given high tree diversity)
+inference_result <- cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "High"))
+cat("Probability of improved livelihoods given high tree diversity: ", inference_result, "\n")
