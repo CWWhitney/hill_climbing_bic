@@ -1,6 +1,6 @@
 ---
 output: github_document
-bibliography: refs/hill_climbing.bib
+bibliography: bib/hill_climbing.bib
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -13,6 +13,18 @@ knitr::opts_chunk$set(
 ```
 
 # Hill Climbing as test for causal model
+
+## Quick start (reproducible run)
+
+From the project root:
+
+```{bash, eval=FALSE}
+Rscript scripts/setup_renv.R
+Rscript scripts/run_all.R
+```
+
+The setup script initializes `renv`, installs required packages, and writes `renv.lock`.
+The run script restores package versions from `renv.lock` and renders `README.Rmd`.
 
 We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms, to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
 
@@ -33,20 +45,20 @@ plot(network_structure)
 
 ## Perform inference 
 
-Calculate the probability of "Livelihoods" being "Improved" given "Trees on Farm". 
+Calculate the probability of "Livelihoods" being "Improved" given high tree diversity.
 
 ```{r inference_result}
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "Yes"))
+cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "High"))
 ```
 
 To validate our Bayesian Network, we can perform several tests to ensure that the model behaves as expected and that the conditional dependencies between the nodes are correctly represented. 
 
 ### Test for inconsistent Evidence
 
-Here we introduce evidence that contradicts the dependency structure to check for the system response. A node conditioned on one state `TreeDiversity == "No"`, but the evidence `Firewood == "Yes"` conflicts with `bn_fitted`, it should return a very low or zero probability (for each iteration of the model). 
+Here we introduce evidence that contradicts the dependency structure to check for the system response. A node conditioned on one state `TreeDiversity == "Low"`, but the evidence `Firewood == "Yes"` conflicts with `bn_fitted`, it should return a very low or zero probability (for each iteration of the model).
 
 ```{r inconsistent_inference}
-cpquery(bn_fitted, event = (TreeDiversity == "No"), evidence = (Firewood == "Yes"))
+cpquery(bn_fitted, event = (TreeDiversity == "Low"), evidence = (Firewood == "Yes"))
 ```
 
 ### Query for Node Probabilities
