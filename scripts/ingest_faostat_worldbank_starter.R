@@ -1,30 +1,46 @@
-# Starter ingestion script for Issue 1 data assembly.
-# Pulls World Bank indicators and scaffolds FAOSTAT ingestion.
+# Catalog-driven ingestion script for model testing data.
+# World Bank indicators are pulled via API.
+# FAOSTAT indicators are read from a local CSV file path in FAOSTAT_INPUT_CSV.
 
 suppressPackageStartupMessages({
   library(httr)
   library(jsonlite)
   library(readr)
   library(dplyr)
+  library(tidyr)
+  library(tibble)
 })
 
 dir.create("data", showWarnings = FALSE, recursive = TRUE)
 
+catalog_path <- file.path("data", "indicator_catalog.csv")
 raw_target <- file.path("data", "model_testing_raw.csv")
-processed_target <- file.path("data", "model_testing_processed.csv")
 
-# World Bank indicators chosen as starter proxies.
-# You can adjust or expand this list as needed.
-wb_indicators <- c(
-  external_risks_proxy = "EN.CLC.CDDY.XD", # Cooling degree days (example climate stress proxy)
-  livelihoods_proxy = "SI.POV.DDAY",       # Poverty headcount ratio at $2.15/day
-  market_proxy = "NV.AGR.TOTL.ZS"          # Agriculture, forestry, and fishing value added (% of GDP)
+if (!file.exists(catalog_path)) {
+  stop("Missing indicator catalog at data/indicator_catalog.csv")
+}
+
+catalog <- read_csv(catalog_path, show_col_types = FALSE) %>%
+  mutate(source = trimws(source))
+
+required_catalog_cols <- c(
+  "source", "indicator_id", "indicator_name", "bn_variable",
+  "direction", "state_type", "active"
 )
 
-fetch_world_bank_indicator <- function(indicator) {
+missing_cols <- setdiff(required_catalog_cols, names(catalog))
+if (length(missing_cols) > 0) {
+  stop("Catalog is missing columns: ", paste(missing_cols, collapse = ", "))
+}
+
+catalog <- catalog %>%
+  filter(active %in% c(1, "1", TRUE, "TRUE", "true")) %>%
+  mutate(indicator_id = as.character(indicator_id))
+
+fetch_world_bank_indicator <- function(indicator_id, indicator_name, bn_variable, direction, state_type) {
   url <- sprintf(
     "https://api.worldbank.org/v2/country/all/indicator/%s?format=json&per_page=20000",
-    indicator
+    URLencode(indicator_id, reserved = TRUE)
   )
 
   resp <- GET(url, timeout(60))
@@ -38,83 +54,112 @@ fetch_world_bank_indicator <- function(indicator) {
   as_tibble(parsed[[2]]) %>%
     transmute(
       country = countryiso3code,
-      year = as.integer(date),
-      indicator = indicator.id,
+      year = suppressWarnings(as.integer(date)),
+      source = "WorldBank",
+      indicator_id = indicator.id,
       indicator_name = indicator.value,
-      value = as.numeric(value),
-      source = "WorldBank"
+      bn_variable = bn_variable,
+      direction = direction,
+      state_type = state_type,
+      value = suppressWarnings(as.numeric(value)),
+      retrieval_date = as.character(Sys.Date())
     ) %>%
-    filter(!is.na(country), !is.na(year))
+    filter(!is.na(country), nchar(country) == 3, !is.na(year))
 }
 
-message("Fetching starter World Bank indicators...")
-wb_raw <- bind_rows(lapply(unname(wb_indicators), fetch_world_bank_indicator))
+fetch_faostat_from_csv <- function(catalog_subset, faostat_path) {
+  if (!file.exists(faostat_path)) {
+    warning("FAOSTAT_INPUT_CSV path does not exist: ", faostat_path)
+    return(tibble())
+  }
 
-# FAOSTAT scaffold:
-# Set FAOSTAT_CSV_URL to a direct CSV endpoint or download location.
-# If not provided, we write an empty FAOSTAT frame as a placeholder.
-faostat_csv_url <- Sys.getenv("FAOSTAT_CSV_URL", unset = "")
-faostat_raw <- tibble(
-  country = character(),
-  year = integer(),
-  indicator = character(),
-  indicator_name = character(),
-  value = numeric(),
-  source = character()
-)
+  fao <- read_csv(faostat_path, show_col_types = FALSE)
 
-if (nzchar(faostat_csv_url)) {
-  message("Attempting FAOSTAT pull from FAOSTAT_CSV_URL...")
-  try({
-    fao <- read_csv(faostat_csv_url, show_col_types = FALSE)
+  country_col <- c("Area Code (ISO3)", "Area", "Country", "country")
+  year_col <- c("Year", "year")
+  item_col <- c("Item", "item")
+  value_col <- c("Value", "value")
 
-    # Minimal generic mapping. Update once your selected FAOSTAT table is fixed.
-    needed <- c("Area", "Year", "Item", "Value")
-    if (all(needed %in% names(fao))) {
-      faostat_raw <- fao %>%
-        transmute(
-          country = Area,
-          year = as.integer(Year),
-          indicator = Item,
-          indicator_name = Item,
-          value = as.numeric(Value),
-          source = "FAOSTAT"
-        ) %>%
-        filter(!is.na(country), !is.na(year))
-    } else {
-      message("FAOSTAT_CSV_URL loaded, but expected columns were not found: Area, Year, Item, Value")
-    }
-  }, silent = TRUE)
+  pick_col <- function(candidates) {
+    hits <- candidates[candidates %in% names(fao)]
+    if (length(hits) == 0) return(NA_character_)
+    hits[[1]]
+  }
+
+  c_col <- pick_col(country_col)
+  y_col <- pick_col(year_col)
+  i_col <- pick_col(item_col)
+  v_col <- pick_col(value_col)
+
+  if (any(is.na(c(c_col, y_col, i_col, v_col)))) {
+    warning("FAOSTAT CSV must include country/year/item/value columns.")
+    return(tibble())
+  }
+
+  fao_std <- fao %>%
+    transmute(
+      country = as.character(.data[[c_col]]),
+      year = suppressWarnings(as.integer(.data[[y_col]])),
+      item = as.character(.data[[i_col]]),
+      value = suppressWarnings(as.numeric(.data[[v_col]]))
+    )
+
+  out <- fao_std %>%
+    inner_join(
+      catalog_subset %>%
+        transmute(indicator_id, indicator_name, bn_variable, direction, state_type),
+      by = c("item" = "indicator_id")
+    ) %>%
+    transmute(
+      country,
+      year,
+      source = "FAOSTAT",
+      indicator_id,
+      indicator_name,
+      bn_variable,
+      direction,
+      state_type,
+      value,
+      retrieval_date = as.character(Sys.Date())
+    ) %>%
+    filter(!is.na(country), !is.na(year))
+
+  out
+}
+
+wb_catalog <- catalog %>% filter(source == "WorldBank")
+fao_catalog <- catalog %>% filter(source == "FAOSTAT")
+
+message("Pulling World Bank indicators from catalog...")
+wb_raw <- bind_rows(lapply(seq_len(nrow(wb_catalog)), function(i) {
+  row <- wb_catalog[i, ]
+  fetch_world_bank_indicator(
+    indicator_id = row$indicator_id,
+    indicator_name = row$indicator_name,
+    bn_variable = row$bn_variable,
+    direction = row$direction,
+    state_type = row$state_type
+  )
+}))
+
+faostat_input_csv <- Sys.getenv("FAOSTAT_INPUT_CSV", unset = "")
+if (nzchar(faostat_input_csv)) {
+  message("Reading FAOSTAT rows from FAOSTAT_INPUT_CSV...")
+  faostat_raw <- fetch_faostat_from_csv(fao_catalog, faostat_input_csv)
 } else {
-  message("FAOSTAT_CSV_URL not set; writing placeholder FAOSTAT data only.")
+  message("FAOSTAT_INPUT_CSV not set. Skipping FAOSTAT ingestion this run.")
+  faostat_raw <- tibble()
 }
 
 raw_data <- bind_rows(wb_raw, faostat_raw) %>%
-  arrange(country, year, source, indicator)
+  mutate(
+    value = suppressWarnings(as.numeric(value)),
+    country = as.character(country)
+  ) %>%
+  arrange(country, year, source, indicator_id)
 
 write_csv(raw_data, raw_target)
 
-# Starter processed frame with model columns only.
-processed_template <- tibble(
-  country = character(),
-  year = integer(),
-  TreeDiversity = character(),
-  Timber = character(),
-  Firewood = character(),
-  Fruit = character(),
-  Market = character(),
-  Shade = character(),
-  Habitat = character(),
-  ExternalRisks = character(),
-  Costs = character(),
-  Benefits = character(),
-  Livelihoods = character(),
-  data_quality_flag = character(),
-  notes = character()
-)
-
-write_csv(processed_template, processed_target)
-
 message("Wrote: ", raw_target)
-message("Wrote: ", processed_target)
-message("Starter ingestion complete.")
+message("Rows written: ", nrow(raw_data))
+message("Ingestion complete.")

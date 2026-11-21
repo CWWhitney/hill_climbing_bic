@@ -1,0 +1,10 @@
+source,indicator_id,indicator_name,bn_variable,direction,state_type,active,notes
+WorldBank,AG.LND.FRST.ZS,Forest area (% of land area),TreeDiversity,higher_is_better,binary_yes_no,1,Proxy for on-farm tree presence/diversity context
+WorldBank,AG.PRD.FOOD.XD,Food production index (2014-2016 = 100),Benefits,higher_is_better,binary_high_low,1,Productivity proxy
+WorldBank,NV.AGR.TOTL.ZS,"Agriculture, forestry, and fishing value added (% of GDP)",Market,higher_is_better,binary_high_low,1,Market relevance proxy
+WorldBank,SI.POV.DDAY,Poverty headcount ratio at $2.15/day (2017 PPP) (% of population),Livelihoods,higher_is_worse,binary_improved,1,Livelihood stress proxy
+WorldBank,EN.CLC.CDDY.XD,Cooling degree days,ExternalRisks,higher_is_worse,binary_high_low,1,Climate stress proxy
+WorldBank,SH.STA.OWAD.ZS,Prevalence of overweight (% of adults),Costs,higher_is_worse,binary_high_low,1,Placeholder burden proxy; replace if better cost proxy chosen
+FAOSTAT,Roundwood,Roundwood production,Timber,higher_is_better,binary_yes_no,1,Match against FAOSTAT Item column
+FAOSTAT,Fuelwood,Fuelwood production,Firewood,higher_is_better,binary_yes_no,1,Match against FAOSTAT Item column
+FAOSTAT,Fruit Primary,Fruit primary production,Fruit,higher_is_better,binary_yes_no,1,Match against FAOSTAT Item column
