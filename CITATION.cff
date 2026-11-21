@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "hill climbing bic"
+abstract: "Validation of expert models with hill climbing mathematical optimization technique and Bayesian information criterion"
+message: "If you use this work, please cite it using these metadata."
+authors:
+  - family-names: Whitney
+    given-names: Cory
+    orcid: "https://orcid.org/0000-0003-4988-4583"
+    affiliation: "University of Bonn"
+repository-code: "https://github.com/CWWhitney/hill_climbing_bic"
+license: MIT
