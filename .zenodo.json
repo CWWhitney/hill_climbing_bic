@@ -1,0 +1,16 @@
+{
+  "title": "hcbic: How much data does it take to test an expert causal diagram?",
+  "upload_type": "software",
+  "description": "An R package and analysis that asks how many observations are needed to recover, or to contradict, an expert-elicited causal diagram of an agroforestry and livelihoods system. It simulates data from the expert model, runs hill-climbing structure learning scored by the Bayesian information criterion, and reports recovery of the diagram and the power to detect each missing arc.",
+  "creators": [
+    {
+      "name": "Whitney, Cory",
+      "affiliation": "University of Bonn",
+      "orcid": "0000-0003-4988-4583"
+    }
+  ],
+  "license": "mit",
+  "access_right": "open",
+  "version": "2.0.0",
+  "keywords": ["causal diagram", "expert elicitation", "structure learning", "Bayesian network", "hill climbing", "power analysis", "agroforestry"]
+}

@@ -1,6 +1,9 @@
 cff-version: 1.2.0
-title: "hill climbing bic"
-abstract: "Validation of expert models with hill climbing mathematical optimization technique and Bayesian information criterion"
+title: "hcbic: How much data does it take to test an expert causal diagram?"
+type: software
+version: 2.0.0
+# Add date-released and doi when the GitHub release is archived on Zenodo.
+abstract: "An R package and analysis that asks how many observations are needed to recover, or to contradict, an expert-elicited causal diagram of an agroforestry and livelihoods system. It simulates data from the expert model, runs hill-climbing structure learning scored by the Bayesian information criterion, and reports recovery of the diagram and the power to detect each missing arc."
 message: "If you use this work, please cite it using these metadata."
 authors:
   - family-names: Whitney
@@ -9,3 +12,11 @@ authors:
     affiliation: "University of Bonn"
 repository-code: "https://github.com/CWWhitney/hill_climbing_bic"
 license: MIT
+keywords:
+  - causal diagram
+  - expert elicitation
+  - structure learning
+  - Bayesian network
+  - hill climbing
+  - power analysis
+  - agroforestry

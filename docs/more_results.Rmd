@@ -1,0 +1,46 @@
+---
+output: github_document
+---
+
+<!-- more_results.md is generated from more_results.Rmd. Please edit that file -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>")
+imp <- read.csv("../results/improvements.csv")
+lit <- read.csv("../results/literature_structures.csv")
+```
+
+# More results
+
+These results use other methods than the one-arrow test on the
+[main page](../README.md).
+
+## Searching for the whole DAG
+
+Hill climbing starts with no arrows. It adds, removes or reverses one arrow at a
+time and keeps each change that raises the BIC. We ran it on 500 simulated farm
+records, 100 times in each setting.
+
+```{r search}
+s <- imp[imp$n == 500, ]
+knitr::kable(
+  data.frame(c("No other information", "Order of causes given",
+               "5% of states recorded wrongly", "10% of states recorded wrongly"),
+             round(19 * s$recall), round(100 * (1 - s$precision))),
+  col.names = c("Setting", "Expert arrows found (of 19)",
+                "Wrong arrows per 100 drawn"),
+  align = "lrr", row.names = FALSE
+)
+```
+
+An arrow counts as found only if it points the right way. "Order of causes given"
+means the search was barred from drawing arrows backwards, for example from
+`Livelihoods` to `TreeDiversity`. The order given was correct.
+
+## Thirteen published studies
+
+Each study was treated as one farm record, with a state chosen by hand for each
+variable. Only `r lit$n_complete[1]` records were complete, and BIC needs complete
+records. On those, a hill-climbing search drew
+`r lit$arcs[lit$structure == "learned_from_scratch"]` arrows, more than the
+expert's 19. A study is not a farm, and a sample this small cannot test the DAG.

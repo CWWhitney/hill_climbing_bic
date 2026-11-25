@@ -1,202 +1,146 @@
 ---
 output: github_document
-bibliography: bib/hill_climbing.bib
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>")
+det <- read.csv("results/detectability.csv")
+rej <- read.csv("results/rejection_when_not_real.csv")
+ex <- read.csv("results/worked_example.csv")
+num <- function(x) format(x, big.mark = ",", trim = TRUE)
+sizes <- sort(unique(det$n))
+typical <- function(d, col) round(100 * tapply(d[[col]], d$n, median)[as.character(sizes)])
+kept <- typical(det, "power")
+gone <- typical(rej, "rejected")
+k <- ex$extra_numbers
+```
+
+# A BIC test on small samples rejects expert arrows that are real
+
+Researchers often draw a causal diagram with experts and then test it against
+data. The diagram is a directed acyclic graph (DAG): variables joined by arrows
+from cause to effect. A common test keeps an arrow only if the diagram scores
+higher with the arrow than without it, using the Bayesian information criterion
+(BIC). We asked what that test can show, using one DAG of agroforestry and
+livelihoods with 11 variables and 19 arrows.
+
+**For a typical arrow in this DAG, samples of 500 records or fewer lead the test
+to reject the arrow, whether or not the arrow is real.**
+
+```{r claim}
+knitr::kable(
+  data.frame(num(sizes), kept, gone),
+  col.names = c("Records", "Arrow is real: times kept (of 100)",
+                "Arrow is not real: times rejected (of 100)"),
+  align = "rrr", row.names = FALSE
 )
 ```
 
-# Hill Climbing as test for causal model
+Each value is the median over the 19 arrows. For a typical arrow, a rejection from a small sample therefore carries almost no
+information.
 
-## Quick start (reproducible run)
+## The DAG
 
-From the project root:
+![The DAG: 11 variables joined by 19 arrows](results/diagram.png)
 
-```{bash, eval=FALSE}
-Rscript scripts/setup_renv.R
-Rscript scripts/run_all.R
-```
+The DAG was built from published studies of agroforestry and farm livelihoods,
+and its conditional probabilities were set by expert judgment. Every
+variable has two states.
 
-The setup script initializes `renv`, installs required packages, and writes `renv.lock`.
-The run script restores package versions from `renv.lock` and renders `README.Rmd`.
+## The test
 
-We apply causal inference techniques, expert-elicited probabilities, and optimization algorithms, to improve decision-making for interventions aimed at enhancing livelihoods through agroforestry. We use a hill-climbing algorithm to learn the structure of a Bayesian Network (BN) based on observed data. The observed data contains information from publications, each contributing to various factors that may influence agroforestry systems and livelihoods in different regions. The goal is to use this data to infer the best network structure that best explains the dependencies among the variables in the dataset. See the details in `hill_climbing.R`.
+We have no adequate field data, so we simulated records from known DAGs. One
+record is one farm with a state for each of the 11 variables. For each arrow:
 
-We aim to build a predictive decision model that connects causal relationships between planting trees on farms and farmer livelihoods. The process has three main steps: 1. searching available literature to define the key causal relationships related to planting trees on farms. A Directed Acyclic Graph (DAG) will be constructed to visually represent these relationships, incorporating various factors like costs, benefits, risks, and their impact on livelihoods, 2. the causal model will be translated into a BN. Literature results will be used to fill in the Conditional Probability Tables (CPTs) for each node in the BN, providing the probability distributions based on available data, 3. once the Bayesian Network is constructed, data will be gathered (even if minimal) to test and refine the model. The hill climbing algorithm will be applied to optimize the model's parameters by adjusting them to best fit the observed data. The optimization process will focus on maximizing the model’s predictive accuracy and identifying the most likely causal relationships. The work demonstrates a robust and adaptable decision model.
+1. **Real arrow.** Simulate records from the DAG with its expert probabilities.
+2. **Absent arrow.** Simulate records from the DAG without that arrow. Its
+   probabilities are fitted to a very large sample from the expert's DAG.
+3. In both cases, score the DAG with the arrow and the DAG without it on the same
+   records. The higher BIC wins.
+4. Repeat 100 times for each sample size.
 
-```{r plot_dagitty}
-  source("functions/dagitty_tree_planting.R")
-# Plot the DAG
-plot(dag)
-```
+## One arrow worked through
 
-We build the same graph in `bnlearn` for use in that environment. See all the custom CPTs in `model_in_bnlearn.R`. 
+BIC is the log-likelihood of the records minus a penalty:
 
-```{r plot_network_structure}
-source("functions/model_in_bnlearn.R")
-plot(network_structure)
-```
+> BIC = log-likelihood − (ln *n* / 2) × number of probabilities estimated
 
-## Perform inference 
+Here *n* is the number of records, and a higher BIC is better. Take the arrow
+`Market → Benefits`. With the arrow, `Benefits` has four causes and needs a
+probability for each of 16 combinations of their states. Without it, `Benefits`
+has three causes and 8 combinations. The arrow therefore costs `r k` extra
+probabilities, a penalty of `r k / 2` × ln *n*. The arrow is kept only if it
+raises the log-likelihood by more than the penalty.
 
-Calculate the probability of "Livelihoods" being "Improved" given high tree diversity.
-
-```{r inference_result}
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (TreeDiversity == "High"))
-```
-
-To validate our Bayesian Network, we can perform several tests to ensure that the model behaves as expected and that the conditional dependencies between the nodes are correctly represented. 
-
-### Test for inconsistent Evidence
-
-Here we introduce evidence that contradicts the dependency structure to check for the system response. A node conditioned on one state `TreeDiversity == "Low"`, but the evidence `Firewood == "Yes"` conflicts with `bn_fitted`, it should return a very low or zero probability (for each iteration of the model).
-
-```{r inconsistent_inference}
-cpquery(bn_fitted, event = (TreeDiversity == "Low"), evidence = (Firewood == "Yes"))
-```
-
-### Query for Node Probabilities
-
-Test the probability distributions of individual nodes given various evidence. For example, given evidence for Market, check the conditional probability distribution for Livelihoods.
-
-Example for Livelihoods:
-
-```{r inference_Livelihoods}
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Benefits == "High"))
-
-```
-
-This should return the probability of improved livelihoods given that the market is high.
-
-### Sensitivity Analysis
-
-Perform a sensitivity analysis to understand how changes in one or more variables affect the results. For example, change the probability of Firewood or Timber and see how it affects the probability of Livelihoods.
-
-```{r sensitivity_analysis}
-cpquery(bn_fitted, event = (Livelihoods == "Improved"), evidence = (Timber == "Yes"))
-
-```
-
-### Simulation and Comparison with Expected Results
-
-Generate synthetic data based on the network structure and compare it with expected or known results.
-
-```{r simulated_data}
-# Simulate 1000 samples
-simulated_data <- rbn(bn_fitted, n = 1000)
-head(simulated_data)
-```
-
-Calculate the observed distribution of 'Livelihoods'.
-
-```{r observed_Livelihoods}
-observed_Livelihoods <- table(simulated_data$Livelihoods) / nrow(simulated_data)
-
-observed_Livelihoods
-```
-
-Save the expectation for 'Livelihoods'. 
-
-```{r expected_Livelihoods}
-expected_Livelihoods <- c("Improved" = 0.7, "Not Improved" = 0.3)
-```
-
-Compare the observed distribution with the expected one. 
-
-```{r observed_expected_compare}
-data.frame(
-  "Observed" = observed_Livelihoods,
-  "Expected" = expected_Livelihoods
+```{r worked}
+w <- det[det$from == "Market" & det$to == "Benefits", ]
+w <- w[w$n %in% c(50, 100, 250, 500), ]
+penalty <- k / 2 * log(w$n)
+knitr::kable(
+  data.frame(num(w$n), sprintf("%.1f", w$median_delta_bic + penalty),
+             sprintf("%.1f", penalty), round(100 * w$power)),
+  col.names = c("Records", "Median gain in log-likelihood", "Penalty",
+                "Times kept (of 100)"),
+  align = "rrrr", row.names = FALSE
 )
 ```
 
-Calculate the distribution of 'Timber' given 'TreeDiversity' (example for other node relationships too).
+The arrow is real in all four rows. The gain grows roughly in proportion to *n*,
+the penalty only with ln *n*, so a large enough sample keeps the arrow.
 
-```{r observed_Timber_given_TreeDiversity}
-table(simulated_data$Timber, simulated_data$TreeDiversity) / nrow(simulated_data)
+## Records needed for each arrow
 
+The table gives the smallest sample size we tried at which the test kept the real
+arrow at least 80 times in 100, the usual power target.
+
+```{r needed}
+det$arrow <- paste0("`", det$from, " → ", det$to, "`")
+needed <- sapply(split(det, det$arrow), function(x) {
+  x <- x[order(x$n), ]
+  if (any(x$power >= 0.8)) x$n[which(x$power >= 0.8)[1]] else Inf
+})
+needed <- sort(needed)
+knitr::kable(
+  data.frame(names(needed),
+             ifelse(is.finite(needed), sapply(needed, num), "more than 5,000")),
+  col.names = c("Arrow", "Records needed"), align = "lr", row.names = FALSE
+)
 ```
 
-Visualize Livelihoods results. 
+The four arrows that need more than 5,000 records have little or no effect in the
+expert probabilities. `Shade` has the same probability under high and low
+`TreeDiversity`. The three arrows into `Costs` from `Firewood`, `Fruit` and
+`TreeDiversity` each change the probability of high costs by at most 0.10.
 
-```{r simulated_data_plot}
-library(ggplot2)
+## What this does not test
 
-ggplot(simulated_data, aes(x = Livelihoods)) +
-  geom_bar(aes(y = after_stat(prop)), stat = "count") +
-  scale_y_continuous(labels = scales::percent) +
-  ggtitle("Distribution of Livelihoods in Simulated Data")
+- Each comparison changes one arrow and takes the rest of the DAG as correct.
+- Arrow direction is not tested. Two DAGs that differ in direction can have the
+  same BIC.
+- Records are independent, complete and free of recording errors.
+- There are no unmeasured common causes.
+- The sample sizes follow from these expert probabilities. Another DAG, or other
+  probabilities, will need other sample sizes.
 
+Real field data will break some of these assumptions, so treat the sample sizes as
+a lower bound for planning, not a guarantee.
+
+## Reproduce
+
+`hcbic` is an R package. With R 4.1 or later:
+
+``` sh
+git clone https://github.com/CWWhitney/hill_climbing_bic
+cd hill_climbing_bic
+Rscript -e 'install.packages(c("bnlearn", "devtools", "rmarkdown", "knitr"))'
+Rscript analysis/00_draw_diagram.R
+Rscript analysis/01_power_of_the_test.R
+Rscript analysis/04_arrows_that_are_not_real.R
+Rscript -e 'rmarkdown::render("README.Rmd")'
 ```
 
-### Hill-climbing algorithm
-
-Learn the structure of a Bayesian network using a hill-climbing algorithm `hc`. 
-
-The observations for the are based on reports from the literature:
-
-Agroforestry introduces both initial and ongoing costs, including planting, labor, and pruning, which can constrain adoption, particularly for resource-poor farmers. External factors, such as market access, extension services, and credit availability, significantly influence these costs, as demonstrated in studies on farmer-managed natural regeneration in Niger (@haglund_dry_2011) and agroforestry practices in sloping lands of Asia and the Pacific (@craswell_agroforestry_1997). Bureaucratic inefficiencies and limited market alternatives also add to these challenges (@akter_agroforestry_2022).
-
-Despite the costs, agroforestry provides substantial benefits to farmers. It enhances access to food, timber, fuelwood, and fodder, directly improving livelihood capitals, as observed in tropical moist forests in Bangladesh (@akter_agroforestry_2022). Agroforestry supports biodiversity conservation, soil fertility, and carbon sequestration, making it a key strategy for climate change mitigation and adaptation in Sub-Saharan Africa (@verchot_climate_2007; @bogale_sustainability_2023). In Ethiopia, smallholder farmers benefit from improved productivity and diversified income streams through agroforestry (@amare_agroforestry_2019), while in Kenya, agroforestry can increase household food security, particularly in regions prone to wildlife crop raiding (@quandt_agroforestry_2021). Agroforestry systems also provide resilience to environmental stressors by diversifying income sources and creating favorable microclimates (@ngango_does_2024; @bishaw_farmers_2013).
-
-However, farmers can also face challenges such as reduced crop yields due to competition for water, nutrients, and light, as well as exposure to fluctuating market conditions (@do_adapting_2024; @akter_agroforestry_2022). These risks are compounded by adoption barriers, including insecure land tenure and lack of institutional support (@hughes_assessing_2020; @johansson_mapping_2013).
-
-The interplay of costs, benefits, and risks ultimately determines the impact of agroforestry on livelihoods. While high costs and risks can hinder adoption and sustainability, the benefits—such as increased resilience, economic returns, and ecosystem services—can offset these challenges (@quandt_agroforestry_2021; @awazi_agroforestry_2020). External factors like cooperative memberships and extension services significantly shape the outcomes of agroforestry systems (@ngango_does_2024; @bishaw_farmers_2013). Research in Bangladesh highlights agroforestry’s positive impacts on livelihoods despite systemic inefficiencies (@akter_agroforestry_2022), while studies in Ethiopia and Kenya demonstrate agroforestry's role in reducing livelihood risks and enhancing resilience to environmental stress (@amare_agroforestry_2019; @bishaw_farmers_2013). In Cameroon, agroforestry has been shown to mitigate conflict between farmers and pastoralists, promoting social and economic stability (@awazi_agroforestry_2020). Similarly, agroforestry practices in Tanzania reveal that social and ecological factors, such as tree survival rates and community perceptions, influence the sustainability of these systems (@johansson_mapping_2013).
-
-Agroforestry’s potential to address multiple livelihood and environmental challenges is clear, but its success depends on targeted policy interventions to reduce costs, mitigate risks, and enhance benefits, ensuring equitable access and scalability across diverse contexts.
-
-```{r hill_climbing}
-# Example with hill climbing (using bnlearn)
-library(bnlearn)
-```
-
-We used the score-based structure learning algorithm from `bnlearn` to learn the structure of a Bayesian network using a hill-climbing algorithm. We used the observed data from the publications with some missing values (NA) for unobserved nodes. 
-
-```{r observed_data}
-source("data/observed_data.R")
-```
-
-Convert all the character columns from our observations into factors for the hill climbing. 
-
-```{r convert_columns}
-
-# Convert character columns to factors
-observed_data$TreeDiversity <- as.factor(observed_data$TreeDiversity)
-observed_data$Timber <- as.factor(observed_data$Timber)
-observed_data$Firewood <- as.factor(observed_data$Firewood)
-observed_data$Fruit <- as.factor(observed_data$Fruit)
-observed_data$Market <- as.factor(observed_data$Market)
-observed_data$Shade <- as.factor(observed_data$Shade)
-observed_data$Habitat <- as.factor(observed_data$Habitat)
-observed_data$ExternalRisks <- as.factor(observed_data$ExternalRisks)
-observed_data$Costs <- as.factor(observed_data$Costs)
-observed_data$Benefits <- as.factor(observed_data$Benefits)
-observed_data$Livelihoods <- as.factor(observed_data$Livelihoods)
-```
-
-Plot the fitted model with the data from the papers only. 
-
-```{r fitted_model}
-source("functions/model_in_bnlearn.R")
-# x in hc = the observations alone
-fitted_model <- hc(observed_data)
-plot(fitted_model)
-```
-
-Plot the model based on both our model structure and the literature when we use the original network structure as a `start`. This is a `class bn` object. It shows DAG and we use it to initialize the `hc` algorithm. 
-
-```{r hill_climbing_model}
-# x in hc = the observations 
-# start = the original network structure 
-hill_climbing_model <- hc(x= observed_data, start = network_structure)
-plot(hill_climbing_model)
-
-```
-
-# References
+[More results](docs/more_results.md) cover searching for a whole DAG by hill
+climbing, recording errors, and 13 published studies. See also the
+[review of version 1](docs/v1_critique.md) and `CITATION.cff`.

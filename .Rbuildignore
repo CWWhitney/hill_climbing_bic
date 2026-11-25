@@ -1,4 +1,15 @@
+^.*\.Rproj$
+^\.Rproj\.user$
 ^renv$
 ^renv\.lock$
+^analysis$
+^docs$
+^results$
+^data-raw$
 ^README\.Rmd$
-.Rhistory
+^README_files$
+^CITATION\.cff$
+^\.zenodo\.json$
+^skill\.md$
+^LICENSE\.md$
+^README\.html$

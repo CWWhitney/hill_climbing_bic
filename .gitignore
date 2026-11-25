@@ -5,3 +5,7 @@
 .workbch
 renv/library/
 renv/staging/
+*.html
+!docs/**/*.html
+data-raw/country_year_experiment/model_testing_raw.csv
+data-raw/country_year_experiment/model_testing_coverage_by_row.csv

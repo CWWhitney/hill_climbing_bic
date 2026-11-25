@@ -1,0 +1,5 @@
+"structure","arcs","n_complete","bic","delta_bic","shd_to_first"
+"expert_bnlearn_v1",19,9,-107.099436340855,-5.11795006139366,0
+"expert_dagitty_v1",18,9,-102.704987186183,-0.723500906721199,3
+"learned_from_scratch",25,9,-101.981486279462,0,28
+"learned_from_expert_start",27,9,-111.954221441869,-9.97273516240764,20
