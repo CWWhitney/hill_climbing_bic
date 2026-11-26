@@ -1,3 +1,11 @@
+# EXPERIMENTAL, not used by the analyses. Step 2 of 3.
+# Turns the raw values into two-level states, one row per country and year.
+#
+# KNOWN BUG: for 'higher_is_worse' indicators the value is negated before the
+# split, and the states are still named High and Low. For Costs and
+# ExternalRisks, 'High' therefore means LOW cost and LOW risk, the opposite of
+# the expert model. Fix this before using model_testing_processed.csv.
+
 # Transform raw model testing data into BN-ready state variables.
 
 suppressPackageStartupMessages({
@@ -22,6 +30,7 @@ if (length(missing_cols) > 0) {
 }
 
 # Normalize direction so larger adjusted_value always means better/more present.
+# Flip the sign so that a larger adjusted value is always 'better'.
 raw_norm <- raw %>%
   mutate(
     value = suppressWarnings(as.numeric(value)),
@@ -56,6 +65,7 @@ if (nrow(agg) == 0) {
   quit(save = "no", status = 0)
 }
 
+# One threshold per variable: the median over all countries and years.
 thresholds <- agg %>%
   group_by(bn_variable, state_type) %>%
   summarise(threshold = median(score, na.rm = TRUE), .groups = "drop")
@@ -63,6 +73,7 @@ thresholds <- agg %>%
 classified <- agg %>%
   inner_join(thresholds, by = c("bn_variable", "state_type")) %>%
   mutate(
+    # Values equal to the median count as the upper state.
     state = case_when(
       state_type == "binary_high_low" & score >= threshold ~ "High",
       state_type == "binary_high_low" & score < threshold ~ "Low",

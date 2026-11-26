@@ -1,3 +1,5 @@
+# Checks on the expert model itself: arrows, probability tables, data loading.
+
 test_that("expert structures are acyclic with the documented arc counts", {
   expect_true(bnlearn::acyclic(expert_network("bnlearn_v1")))
   expect_true(bnlearn::acyclic(expert_network("dagitty_v1")))

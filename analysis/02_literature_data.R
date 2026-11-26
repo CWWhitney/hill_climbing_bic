@@ -3,6 +3,7 @@
 
 devtools::load_all(quiet = TRUE)
 
+# 13 rows, one per published study, hand-coded. A study is not a farm.
 obs <- literature_observations()
 
 # 1. Score the two expert structures and the structure learned from the data.

@@ -1,0 +1,17 @@
+# Quarto settings for the literature review.
+# Render from the repository root:  quarto render manuscript
+project:
+  type: default
+  output-dir: _output
+
+bibliography: references.bib
+csl: ../docs/literature_review/apa.csl
+
+format:
+  html:
+    toc: true
+  docx:
+    toc: false
+  pdf:
+    pdf-engine: xelatex
+    keep-tex: true   # arXiv asks for the LaTeX source, not only the PDF

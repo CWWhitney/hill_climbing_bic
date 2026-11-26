@@ -13,11 +13,15 @@
 #' @export
 compare_structures <- function(data, candidates) {
   stopifnot(is.list(candidates), !is.null(names(candidates)))
+  # BIC needs complete rows. All candidates are scored on the same rows.
   cc <- data[stats::complete.cases(data), , drop = FALSE]
+  # Drop states that no longer occur. This lowers the number of estimated
+  # probabilities, and so the penalty, for every candidate alike.
   cc[] <- lapply(cc, droplevels)
   bic <- vapply(candidates, function(g) {
     suppressWarnings(bnlearn::score(g, cc, type = "bic"))
   }, numeric(1))
+  # delta_bic is 0 for the best candidate and negative for the others.
   data.frame(
     structure = names(candidates),
     arcs = vapply(candidates, bnlearn::narcs, numeric(1)),

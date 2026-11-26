@@ -1,3 +1,6 @@
+# EXPERIMENTAL, not used by the analyses. Step 3 of 3.
+# Counts how much of each variable and each row is filled.
+
 # Coverage report for processed model testing dataset.
 
 suppressPackageStartupMessages({

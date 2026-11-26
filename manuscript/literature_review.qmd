@@ -1,0 +1,99 @@
+---
+title: "Testing expert causal diagrams with data: a literature review"
+author:
+  - name: Cory Whitney
+    orcid: 0000-0003-4988-4583
+    affiliation: University of Bonn
+---
+
+<!--
+DRAFT SKELETON. Each section states the question it must answer.
+Add a citation only after reading the source, and run
+Rscript manuscript/check_references.R before committing references.bib.
+-->
+
+## The problem
+
+<!-- Question: when experts draw a causal diagram, how can data test it?
+     Open with a concrete case, for example one arrow from the agroforestry
+     diagram. -->
+
+## Expert knowledge and data in Bayesian networks
+
+<!-- Question: how have expert judgment and data been combined to learn the
+     structure of a Bayesian network? -->
+
+@Heckerman_1995 address learning Bayesian networks from a combination of
+knowledge and statistical data.
+
+## Scoring diagrams
+
+<!-- Question: how does a score such as BIC trade fit against complexity, and
+     what follows for small samples? -->
+
+The Bayesian information criterion goes back to @Schwarz_1978.
+
+## Sample size
+
+<!-- Search of 26 November 2026: web search, arXiv, Crossref and DataCite. Not
+     systematic. Zuk et al. read in full; the others from their abstracts, except
+     Constantin et al., cited for what its title states. Not cited because it
+     could not be matched to a record: Dai, Korb, Wallace and Wu (1997), IJCAI,
+     on weak links and small samples, which Zuk et al. cite. Read it before
+     submitting. -->
+
+A penalized score tends to miss real arrows in small samples. @Zuk_2006 study how
+many samples are needed to learn the correct structure of a Bayesian network of
+binary variables with the BIC. They separate two errors. One is preferring a
+structure that cannot represent the true distribution, for example one that lacks
+a real arrow. The other is preferring a structure with more parameters than
+needed. The first error falls exponentially with sample size and the second falls
+as a power of it, so the second dominates in large samples. In small samples the
+first is the more likely error. In their example with four variables, it was the
+more likely error below 2,000 samples.
+
+Learning the correct structure also needs more data than approximating the
+distribution [@Zuk_2006], a task whose sample complexity @Friedman_1996 analyze.
+@Koivisto_2006 studies by simulation the statistical power of a Bayesian method
+of structure learning, with 20 to 10,000 records and 5 to 25 variables. In their
+own simulations, @Scutari_2013 report that the sensitivity of their rule for
+keeping arrows rises linearly with the logarithm of sample size. Bootstrap resampling
+gives a measure of confidence in each arrow [@Friedman_1999]. For another family
+of network models, @Constantin_2026 propose a Monte Carlo method of sample size
+analysis.
+
+## Other ways to test a diagram
+
+A diagram implies independencies that can be checked in data, for example with
+the `dagitty` package [@Ankan_2021]. @Eulig_2023 compare the number of such
+violations with the number found after shuffling the variables among the boxes.
+@Pitchforth_2013 propose a validation framework for expert-elicited Bayesian
+networks.
+
+## Applications to farm and food decisions
+
+<!-- Question: where have expert causal diagrams informed agricultural
+     decisions, and were they tested? -->
+
+One example from our group concerns decision tools for agricultural development
+policy and household nutrition [@Whitney_2018].
+
+## Gap
+
+<!-- Question: what do the sections above leave open that hcbic addresses? -->
+
+<!-- NOVELTY: that small samples make BIC reject real arrows is NOT new
+     (Zuk et al. 2006). Do not present it as a finding of this work. -->
+
+The finding that small samples lead the BIC to reject real arrows agrees with
+@Zuk_2006. `hcbic` applies the idea to one expert-elicited diagram of
+agroforestry. It reports the sample size needed arrow by arrow, under the
+expert's own probabilities, and shows which arrows those probabilities make
+undetectable.
+
+The structure learning in `hcbic` uses the `bnlearn` package [@Scutari_2010].
+
+## References
+
+::: {#refs}
+:::

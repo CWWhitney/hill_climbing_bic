@@ -1,3 +1,6 @@
+# Checks on the analysis functions. Small sizes keep the tests fast, so they
+# test behavior, not the published numbers.
+
 test_that("compare_structures drops incomplete rows and reports how many remain", {
   d <- literature_observations()
   res <- compare_structures(d, list(expert = expert_network(),

@@ -22,6 +22,8 @@ retrievals.
 
 ## Why it cannot support a test yet
 
+* **Known bug.** `Costs` and `ExternalRisks` are coded the wrong way round: their
+  `High` means low cost and low risk. Fix the transform script before use.
 * Five of the 11 variables (`Timber`, `Firewood`, `Fruit`, `Shade`, `Habitat`)
   have no data. `Livelihoods` is observed for 17% of rows.
 * Several proxies are weak. Overweight prevalence stands in for `Costs` and

@@ -3,6 +3,7 @@
 
 devtools::load_all(quiet = TRUE)
 
+# The other half of the README table: arrows that do not exist.
 rej <- arc_rejection(reps = 100, seed = 20261124)
 write.csv(rej, "results/rejection_when_not_real.csv", row.names = FALSE)
 
@@ -10,10 +11,13 @@ write.csv(rej, "results/rejection_when_not_real.csv", row.names = FALSE)
 # large sample, set beside the BIC penalty it must beat.
 set.seed(20261124)
 big <- simulate_expert(1e6)
+# Worked example in the README: the arrow Market -> Benefits.
 with_arc <- expert_network()
 without <- bnlearn::drop.arc(with_arc, "Market", "Benefits")
 ll <- function(g) bnlearn::score(g, big, type = "loglik")
 k <- function(g) bnlearn::nparams(bnlearn::bn.fit(g, big[1:1000, ]))
+# gain_per_record: average log-likelihood gain from the arrow.
+# extra_numbers: probabilities the arrow adds, which sets the BIC penalty.
 ex <- data.frame(gain_per_record = (ll(with_arc) - ll(without)) / nrow(big),
                  extra_numbers = k(with_arc) - k(without))
 write.csv(ex, "results/worked_example.csv", row.names = FALSE)

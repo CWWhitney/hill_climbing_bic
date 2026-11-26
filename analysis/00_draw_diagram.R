@@ -1,3 +1,6 @@
+# Step 0 of 4. Output: results/diagram.png (shown in the README).
+# Box positions are chosen by hand so that no arrow passes behind a box.
+
 # Draw the expert diagram for the README.
 # Run from the repository root:  Rscript analysis/00_draw_diagram.R
 
@@ -26,6 +29,7 @@ edge_point <- function(x0, y0, x1, y1) {
   c(x0 + t * (x1 - x0), y0 + t * (y1 - y0))
 }
 
+# Draw the arrows first, then the boxes on top of them.
 png("results/diagram.png", width = 2000, height = 1350, res = 200)
 par(mar = c(0, 0, 0, 0))
 plot(NA, xlim = c(-0.2, 12), ylim = c(0.9, 9.9), axes = FALSE, xlab = "", ylab = "")

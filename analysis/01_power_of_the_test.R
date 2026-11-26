@@ -4,15 +4,19 @@
 
 devtools::load_all(quiet = TRUE)
 
+# Sample sizes to try, from the 13 studies of version 1 up to 5,000 farms.
 n_grid <- c(13, 50, 100, 250, 500, 1000, 5000)
 
+# Study A: how much of the whole diagram does a search rebuild?
 rec <- recovery_study(n_grid = n_grid, reps = 100, seed = 20261124)
 write.csv(rec, "results/recovery.csv", row.names = FALSE)
 
+# Study B (used by the README): is each real arrow kept by BIC?
 det <- arc_detectability(n_grid = n_grid, reps = 100, seed = 20261124)
 write.csv(det, "results/detectability.csv", row.names = FALSE)
 
 # Figure 1: recovery of the expert diagram by sample size
+# Average over the 100 replicates at each size.
 summ <- aggregate(cbind(recall, precision, skeleton_recall, arcs_learned, shd) ~ n,
                   data = rec, FUN = mean)
 png("results/recovery.png", width = 1400, height = 900, res = 180)

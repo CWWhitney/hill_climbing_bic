@@ -1,3 +1,8 @@
+# EXPERIMENTAL, not used by the analyses. Step 1 of 3.
+# Downloads the indicators listed in indicator_catalog.csv into
+# model_testing_raw.csv. Run from the repository root. Needs a network.
+# World Bank requests fetch one page of up to 20,000 rows per indicator.
+
 # Catalog-driven ingestion script for model testing data.
 # World Bank indicators are pulled via API.
 # FAOSTAT indicators are read from a local CSV file path in FAOSTAT_INPUT_CSV.
@@ -114,7 +119,8 @@ fetch_faostat_from_csv <- function(catalog_subset, faostat_path) {
       country,
       year,
       source = "FAOSTAT",
-      indicator_id,
+      # the join keeps the key under its left-hand name, 'item'
+      indicator_id = item,
       indicator_name,
       bn_variable,
       direction,

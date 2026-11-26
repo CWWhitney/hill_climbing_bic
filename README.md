@@ -15,26 +15,27 @@ arrows.
 the test to reject the arrow, whether or not the arrow is real.**
 
 | Records | Arrow is real: times kept (of 100) | Arrow is not real: times rejected (of 100) |
-|---:|---:|---:|
-| 13 | 1 | 100 |
-| 50 | 2 | 100 |
-| 100 | 1 | 100 |
-| 250 | 2 | 100 |
-| 500 | 12 | 100 |
-| 1,000 | 55 | 100 |
-| 5,000 | 100 | 100 |
+|--------:|-----------------------------------:|-------------------------------------------:|
+|      13 |                                  1 |                                        100 |
+|      50 |                                  2 |                                        100 |
+|     100 |                                  1 |                                        100 |
+|     250 |                                  2 |                                        100 |
+|     500 |                                 12 |                                        100 |
+|   1,000 |                                 55 |                                        100 |
+|   5,000 |                                100 |                                        100 |
 
 Each value is the median over the 19 arrows. For a typical arrow, a
 rejection from a small sample therefore carries almost no information.
 
+This pattern is known: Zuk, Margel and Domany (2006,
+[arXiv:1206.6862](https://arxiv.org/abs/1206.6862)) showed that in small
+samples the BIC is more likely to omit a real arrow than to add a false
+one. What this page adds is the sample size for each arrow of one expert
+diagram.
+
 ## The DAG
 
-<figure>
-<img src="results/diagram.png"
-alt="The DAG: 11 variables joined by 19 arrows" />
-<figcaption aria-hidden="true">The DAG: 11 variables joined by 19
-arrows</figcaption>
-</figure>
+![The DAG: 11 variables joined by 19 arrows](results/diagram.png)
 
 The DAG was built from published studies of agroforestry and farm
 livelihoods, and its conditional probabilities were set by expert
@@ -116,14 +117,14 @@ high costs by at most 0.10.
 
 ## What this does not test
 
-- Each comparison changes one arrow and takes the rest of the DAG as
-  correct.
-- Arrow direction is not tested. Two DAGs that differ in direction can
-  have the same BIC.
-- Records are independent, complete and free of recording errors.
-- There are no unmeasured common causes.
-- The sample sizes follow from these expert probabilities. Another DAG,
-  or other probabilities, will need other sample sizes.
+-   Each comparison changes one arrow and takes the rest of the DAG as
+    correct.
+-   Arrow direction is not tested. Two DAGs that differ in direction can
+    have the same BIC.
+-   Records are independent, complete and free of recording errors.
+-   There are no unmeasured common causes.
+-   The sample sizes follow from these expert probabilities. Another
+    DAG, or other probabilities, will need other sample sizes.
 
 Real field data will break some of these assumptions, so treat the
 sample sizes as a lower bound for planning, not a guarantee.

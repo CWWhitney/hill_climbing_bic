@@ -1,3 +1,5 @@
+# Helper: write each arrow of a diagram as text, so two diagrams can be
+# compared. With directed = FALSE, A->B and B->A become the same entry.
 arc_keys <- function(g, directed = TRUE) {
   a <- bnlearn::arcs(g)
   if (nrow(a) == 0) return(character(0))
@@ -28,19 +30,27 @@ arc_keys <- function(g, directed = TRUE) {
 recovery_study <- function(n_grid = c(13, 50, 100, 250, 500, 1000, 5000),
                            reps = 50, seed = 1, truth_fit = expert_fit(),
                            blacklist = NULL, error = 0) {
+  # The expert diagram is the 'truth' that generates the data.
   truth <- bnlearn::bn.net(truth_fit)
   true_dir <- arc_keys(truth)
   true_skel <- arc_keys(truth, directed = FALSE)
+  # One seed for the whole study, so a rerun gives identical numbers.
   set.seed(seed)
   rows <- vector("list", length(n_grid) * reps)
   k <- 0
   for (n in n_grid) {
     for (r in seq_len(reps)) {
+      # 1. Draw n artificial farm records from the expert model.
       d <- bnlearn::rbn(truth_fit, n)
+      # 2. Optionally write some values down wrongly.
       if (error > 0) d <- misrecord(d, error)
+      # 3. Search for a diagram, starting with no arrows. Warnings about states
+      #    that never occur in a small sample are expected and silenced.
       h <- suppressWarnings(bnlearn::hc(d, blacklist = blacklist))
       learned <- arc_keys(h)
       k <- k + 1
+      # 4. Score the search against the truth. precision is undefined (NA) when
+      #    the search draws no arrow; check for NA before averaging.
       rows[[k]] <- data.frame(
         n = n, rep = r, arcs_learned = length(learned),
         recall = mean(true_dir %in% learned),

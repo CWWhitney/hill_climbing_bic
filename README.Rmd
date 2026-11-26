@@ -41,6 +41,11 @@ knitr::kable(
 Each value is the median over the 19 arrows. For a typical arrow, a rejection from a small sample therefore carries almost no
 information.
 
+This pattern is known: Zuk, Margel and Domany (2006,
+[arXiv:1206.6862](https://arxiv.org/abs/1206.6862)) showed that in small samples
+the BIC is more likely to omit a real arrow than to add a false one. What this
+page adds is the sample size for each arrow of one expert diagram.
+
 ## The DAG
 
 ![The DAG: 11 variables joined by 19 arrows](results/diagram.png)

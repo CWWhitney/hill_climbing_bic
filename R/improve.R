@@ -32,8 +32,10 @@ causal_order_blacklist <- function() {
 #' @export
 misrecord <- function(data, p) {
   data[] <- lapply(data, function(x) {
+    # Choose which values to corrupt, each with probability p.
     flip <- stats::runif(length(x)) < p
     code <- as.integer(x)
+    # Two-level factors are coded 1 and 2, so 3 - code swaps them.
     code[flip] <- 3L - code[flip]
     factor(levels(x)[code], levels = levels(x))
   })

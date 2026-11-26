@@ -19,6 +19,7 @@
 #' @export
 expert_edges <- function(variant = c("bnlearn_v1", "dagitty_v1")) {
   variant <- match.arg(variant)
+  # The arrows are data, not code: edit the CSV to change a diagram.
   path <- system.file("extdata", "expert_dag_edges.csv", package = "hcbic")
   e <- utils::read.csv(path, stringsAsFactors = FALSE)
   e <- e[e$variant == variant, c("from", "to")]
@@ -31,6 +32,7 @@ expert_edges <- function(variant = c("bnlearn_v1", "dagitty_v1")) {
 expert_network <- function(variant = c("bnlearn_v1", "dagitty_v1")) {
   e <- expert_edges(match.arg(variant))
   net <- bnlearn::empty.graph(sort(unique(c(e$from, e$to))))
+  # bnlearn refuses this assignment if the arrows form a loop.
   bnlearn::arcs(net) <- as.matrix(e)
   net
 }
@@ -56,6 +58,7 @@ expert_fit <- function() {
 literature_observations <- function(with_source = FALSE) {
   path <- system.file("extdata", "literature_observations.csv", package = "hcbic")
   d <- utils::read.csv(path, stringsAsFactors = FALSE, na.strings = "")
+  # Set the bibliography key aside so that only variables remain.
   src <- d$source
   d$source <- NULL
   d[] <- lapply(d, as.factor)

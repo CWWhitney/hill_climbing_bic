@@ -23,11 +23,15 @@ arc_detectability <- function(n_grid = c(13, 50, 100, 250, 500, 1000, 5000),
   set.seed(seed)
   out <- list()
   for (n in n_grid) {
+    # One row per replicate, one column per arrow.
     delta <- matrix(NA_real_, nrow = reps, ncol = nrow(a))
     for (r in seq_len(reps)) {
+      # Data in which every arrow is real.
       d <- bnlearn::rbn(truth_fit, n)
       s_true <- suppressWarnings(bnlearn::score(truth, d, type = "bic"))
       for (i in seq_len(nrow(a))) {
+        # The rival diagram is the truth with arrow i removed. A positive
+        # difference means BIC prefers keeping the arrow.
         rival <- bnlearn::drop.arc(truth, a[i, 1], a[i, 2])
         delta[r, i] <- s_true - suppressWarnings(bnlearn::score(rival, d, type = "bic"))
       }
@@ -60,14 +64,17 @@ arc_rejection <- function(n_grid = c(13, 50, 100, 250, 500, 1000, 5000),
   truth <- bnlearn::bn.net(truth_fit)
   a <- bnlearn::arcs(truth)
   set.seed(seed)
+  # A very large sample, used only to fit tables for the 'arrow absent' worlds.
   big <- bnlearn::rbn(truth_fit, fit_n)
   out <- list()
   for (i in seq_len(nrow(a))) {
+    # A world in which arrow i does not exist.
     without <- bnlearn::drop.arc(truth, a[i, 1], a[i, 2])
     # A prior worth one record avoids blank probabilities for combinations of
     # causes that never occur in the fitting sample.
     world <- bnlearn::bn.fit(without, big, method = "bayes", iss = 1)
     for (n in n_grid) {
+      # For each replicate: does BIC prefer the diagram without the arrow?
       rejected <- vapply(seq_len(reps), function(r) {
         d <- bnlearn::rbn(world, n)
         suppressWarnings(bnlearn::score(without, d, type = "bic") >

@@ -7,12 +7,15 @@ devtools::load_all(quiet = TRUE)
 n_grid <- c(13, 50, 100, 250, 500, 1000, 5000)
 seed <- 20261124
 
+# Repeat study A under one setting and average the results.
 run <- function(label, ...) {
   r <- recovery_study(n_grid = n_grid, reps = 100, seed = seed, ...)
   m <- aggregate(cbind(recall, precision) ~ n, data = r, FUN = mean)
   cbind(setting = label, m)
 }
 
+# The first setting is the baseline. The others add expert knowledge of the
+# order of causes, or recording errors.
 out <- rbind(
   run("search with no help"),
   run("order of causes given", blacklist = causal_order_blacklist()),
