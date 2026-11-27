@@ -1,4 +1,9 @@
-# Literature review
+# Manuscripts
+
+`preprint.qmd` is the analysis preprint. It reads `results/*.csv` (from `analysis/01` to `05`) and
+`R/expert_cpts.R`; render it with `quarto render manuscript/preprint.qmd`.
+Its LaTeX source for arXiv is `manuscript/preprint.tex`. The rest of this page
+covers the literature review.
 
 | File | Role |
 |---|---|

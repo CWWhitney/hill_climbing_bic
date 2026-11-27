@@ -1,3 +1,10 @@
+# hcbic (development)
+
+* New `arrow_families()`, `arrow_information()`, `arrow_power()`,
+  `records_needed()`, `simulate_power()` and `random_diagram()` show how the
+  records needed depend on effect size and number of causes
+  (`analysis/05_many_diagrams.R`).
+
 # hcbic 2.0.0
 
 A rebuild of version 1.0.0 (see `docs/v1_critique.md` for the review that motivated it).
